@@ -1,6 +1,6 @@
 # Mock to Real Backlog
 
-Purpose: list Keyros tabs and functions that still depend on mock/local/fallback behavior and must be converted into real product flows.
+Purpose: list Keyros tabs and functions that still depend on mock/local/fallback behavior and must be converted, removed, or deferred.
 
 Source product repo inspected: `rtzforyou/easytattoo-crm`.
 
@@ -65,41 +65,6 @@ Required implementation for app billing:
 - Add access control based on plan/status later.
 - Keep provider integration abstract so Stripe can be added later.
 
-### Forms settings / consent forms
-
-Status: fake/local.
-
-Evidence:
-
-- `FormsSettings.tsx` imports `useMockData`.
-- Form templates are initialized inside `useMockData` with a hardcoded generic consent form.
-- Template CRUD is local state.
-- File upload and signature are marked coming soon.
-
-Required implementation:
-
-- Create real `form_templates`, `form_template_versions`, and `form_submissions` flows.
-- Store template versions immutably once used.
-- Persist client submissions with organization and contact/deal links.
-- Implement signature/file fields or keep disabled with explicit product status.
-- Add permission rules for who can create/archive forms.
-
-### Workflows tab
-
-Status: fake/local.
-
-Evidence:
-
-- `WorkflowTabContent.tsx` imports `useMockData`.
-- Workflows use local `addWorkflow`, `updateWorkflow`, `deleteWorkflow`, `toggleWorkflowStatus`.
-
-Required implementation:
-
-- Decide whether workflows are separate from automations or just multi-step automations.
-- Create real database model if they remain separate.
-- Add execution engine, status, logs, retries and failure handling.
-- Connect workflows to automation event logs.
-
 ### Team members / permissions
 
 Status: mixed; invitations are real, members/permission editing still fake/local.
@@ -116,6 +81,61 @@ Required implementation:
 - Persist role and permissions.
 - Validate permissions server-side, not only in the frontend.
 - Ensure invite acceptance updates real membership and cannot be forged with only a URL token.
+
+## Priority 1B — Remove from core app instead of implementing now
+
+### Forms settings / consent forms
+
+Decision: remove from core app for now.
+
+Reason:
+
+- Not essential to the current Keyros core.
+- Can be replaced by Google Forms or external form tools.
+- Real implementation would require form templates, versioning, submissions, file uploads, signature handling and permission logic.
+- Current value does not justify current complexity.
+
+Current status:
+
+- `FormsSettings.tsx` imports `useMockData`.
+- Form templates are initialized inside `useMockData` with a hardcoded generic consent form.
+- Template CRUD is local state.
+- File upload and signature are marked coming soon.
+
+Required action:
+
+- Remove Forms tab from Settings.
+- Remove or hide Forms-related UI from the base product.
+- Remove Forms from core graph.
+- Keep no active dependency on `useMockData` for forms.
+- Optional future: allow external form URL integration only.
+
+### Workflows tab
+
+Decision: remove from core app for normal users.
+
+Reason:
+
+- Too complex for the standard Keyros user.
+- Risks confusing users who mainly need simple automations.
+- Current implementation is fake/local.
+
+Premium possibility:
+
+- Workflows may return later as an advanced premium or agency-only feature, especially for marketing companies.
+- If implemented later, it should be positioned as advanced automation builder, not as a basic CRM feature.
+
+Current status:
+
+- `WorkflowTabContent.tsx` imports `useMockData`.
+- Workflows use local `addWorkflow`, `updateWorkflow`, `deleteWorkflow`, `toggleWorkflowStatus`.
+
+Required action now:
+
+- Remove Workflows tab from Automations for base users.
+- Remove Workflows from core graph.
+- Keep simple automations as the core automation model.
+- Do not create real workflow database model now.
 
 ## Priority 2 — Mixed real/fake; clean architecture required
 
@@ -138,20 +158,20 @@ Required implementation:
 
 ### Automations tab
 
-Status: mostly real automations, but trigger options and workflows still depend on mock/local behavior.
+Status: mostly real automations, but trigger options still depend on mock/local behavior.
 
 Evidence:
 
 - `AutomationsContent.tsx` uses real `useAutomations` for automation CRUD.
 - It still imports `useMockData` for `automationTriggers`.
-- `WorkflowTabContent.tsx` is local/mock.
+- `WorkflowTabContent.tsx` is local/mock and should be removed from base app.
 - `useAutomations.ts` persists automations to Supabase and maps frontend fields to database fields.
 
 Required implementation:
 
 - Move trigger definitions to a real central registry or database-backed enum.
 - Remove trigger list from `useMockData`.
-- Connect workflows or delete the workflows tab until it is real.
+- Remove Workflows tab from base UI.
 - Confirm execution backend handles delay, idempotency, retry and logs.
 
 ### Dashboard tab
@@ -220,17 +240,18 @@ Required plan:
 
 1. Freeze `useMockData` — no new feature should depend on it.
 2. Create one real hook per domain.
-3. Remove domain by domain from `useMockData`.
-4. Delete `useMockData` only after all imports are gone.
+3. Remove forms and workflows from the UI instead of implementing them now.
+4. Remove domain by domain from `useMockData`.
+5. Delete `useMockData` only after all imports are gone.
 
 ## Recommended implementation order
 
 1. Split payments into client payments and app billing.
 2. Implement client payments manually first, without Stripe.
 3. Implement app billing model separately, with provider integration in standby.
-4. Team members and permissions real model.
-5. Forms real persistence and versioning.
-6. Workflows decision: implement as real multi-step automations or remove tab.
+4. Remove Forms from core app.
+5. Remove Workflows from base app; keep as future premium/agency hypothesis.
+6. Team members and permissions real model.
 7. Calendar cleanup: remove mock contacts/tattooers dependency.
 8. Automations cleanup: real trigger registry and execution guarantees.
 9. Remove legacy dashboard/fallback calculations from `useMockData`.
