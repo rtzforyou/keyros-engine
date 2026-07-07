@@ -3,25 +3,24 @@
 To: Antenor
 Copy/notification: rtzlatattoo@gmail.com
 From: ChatGPT — Orchestrator / Critical Planner
-Subject: Fast Lane Queue — small isolated cleanups while Claude inventories useMockData
+Subject: Fast Lane Queue v2 — dead-code cleanup from Claude useMockData inventory
 Date: 2026-07-07
 
 ## Context
 
-You completed:
+Claude delivered the refreshed `useMockData` inventory:
 
 ```text
-Step 2 — Remove Forms from core Settings UI
-Step 3 — Verify Workflows hidden from base Automations UI
+agent-room/reports/2026-07-07-claude-usemockdata-inventory-report.md
 ```
 
-Claude is still working on the full `useMockData` inventory.
+Status: `needs_review`.
 
-Victor approved optimizing your workflow so you do not stay idle while Claude works.
+The inventory confirmed several now-orphaned UI files that still import `useMockData` but are no longer imported by active app code.
+
+Victor wants Antenor optimized in a fast lane of small isolated tasks, not waiting idle for Claude.
 
 ## Read first
-
-Read:
 
 ```text
 rtzforyou/keyros-engine
@@ -35,22 +34,8 @@ REPORTING_STANDARD.md
 PARALLEL_AGENT_WORKFLOW.md
 agent-room/decisions/2026-07-07-antenor-fast-lane-rule.md
 agent-room/TASK_STATUS_AND_REPORT_BRANCH_RULE.md
+agent-room/decisions/2026-07-07-orchestrator-autonomy-rule.md
 ```
-
-## Fast lane rule
-
-You may execute the queue below one task at a time.
-
-For each task:
-
-1. create a separate branch;
-2. keep the change narrow;
-3. run build/typecheck if relevant;
-4. create a report in `keyros-engine/agent-room/reports/`;
-5. provide branch + commit SHA;
-6. continue to the next queued task only if there is no conflict, no unexpected file, and no scope expansion.
-
-If anything unexpected appears, stop and report `blocked`.
 
 ## Product repository
 
@@ -58,18 +43,36 @@ If anything unexpected appears, stop and report `blocked`.
 rtzforyou/easytattoo-crm
 ```
 
+## Fast lane rule
+
+Execute one task at a time.
+
+Each task must have its own product branch and its own report.
+
+Continue to the next queued task only if:
+
+- no conflict;
+- no unexpected files;
+- no build failure caused by your change;
+- no scope expansion;
+- no overlap with Claude.
+
+If anything unexpected appears, stop and report `blocked`.
+
 ---
 
-# Task A — Remove dead Workflow UI files
+# Task A — Remove orphaned Forms/Workflow UI files
 
 ## Objective
 
-Delete dead Workflow UI components that are no longer imported by the base app after Workflows was removed from Automations UI.
+Delete orphaned UI files that are no longer imported by active app code and still pull from `useMockData`.
+
+This is a pure dead-code deletion task.
 
 ## Branch
 
 ```text
-antenor/remove-dead-workflow-ui
+antenor/remove-orphaned-mock-ui-files
 ```
 
 ## Allowed files
@@ -77,6 +80,8 @@ antenor/remove-dead-workflow-ui
 Only these files may be deleted:
 
 ```text
+components/settings/FormsSettings.tsx
+components/contacts/ContactFormsTab.tsx
 components/automations/WorkflowTabContent.tsx
 components/automations/WorkflowDialog.tsx
 components/automations/WorkflowItemCard.tsx
@@ -84,15 +89,17 @@ components/automations/WorkflowItemCard.tsx
 
 ## Required verification before deletion
 
-Before deleting, confirm again that no active file imports these components.
-
-At minimum search for:
+Before deleting, search for active imports/usages of:
 
 ```text
+FormsSettings
+ContactFormsTab
 WorkflowTabContent
 WorkflowDialog
 WorkflowItemCard
 ```
+
+If any file is still imported by active app code, do not delete it. Stop and report `blocked`.
 
 ## Forbidden
 
@@ -102,6 +109,7 @@ Do not modify:
 components/automations/AutomationsContent.tsx
 hooks/useAutomations.ts
 hooks/useMockData.ts
+types.ts
 supabase/
 ```
 
@@ -111,36 +119,52 @@ Do not remove workflow types from `types.ts` in this task.
 
 Do not touch translation files in this task.
 
-## Report path
+Do not touch Forms permission strings in `App.tsx` or `Login.tsx` in Task A.
+
+## Verification required
+
+Run:
 
 ```text
-agent-room/reports/2026-07-07-antenor-remove-dead-workflow-ui-report.md
+npm run build
+```
+
+If available and fast enough, also run:
+
+```text
+npx tsc --noEmit
+```
+
+If typecheck still has pre-existing errors, report them clearly and confirm no new errors were introduced by deleted files.
+
+## Report path
+
+Create report in `keyros-engine`:
+
+```text
+agent-room/reports/2026-07-07-antenor-remove-orphaned-mock-ui-files-report.md
+```
+
+Use your own engine branch for the report:
+
+```text
+antenor/remove-orphaned-mock-ui-files-report
 ```
 
 ---
 
-# Task B — Verify remaining Forms permission references
+# Task B — Clean remaining Forms module permission strings
 
 Execute Task B only after Task A is clean/completed.
 
 ## Objective
 
-Verify where `forms` still appears in active module/permission lists after Forms UI was removed.
-
-This is verification-first.
+Remove dead `'forms'` strings from static module/permission lists after Forms UI was removed from the core app.
 
 ## Branch
 
-If no code change is needed:
-
 ```text
-none in product; report only
-```
-
-If a tiny cleanup is clearly safe:
-
-```text
-antenor/verify-forms-permission-refs
+antenor/remove-forms-module-strings
 ```
 
 ## Files to inspect
@@ -150,11 +174,11 @@ App.tsx
 components/auth/Login.tsx
 ```
 
-## Allowed action
+## Allowed change
 
-Report only unless the only remaining change is removing `'forms'` from a hardcoded module list.
+Remove only `'forms'` from hardcoded module arrays/lists.
 
-If you remove `'forms'`, touch only:
+Allowed files to change:
 
 ```text
 App.tsx
@@ -171,12 +195,22 @@ Do not modify `useInvitations.ts`.
 
 Do not touch Supabase.
 
-Do not change roles/permissions model beyond removing dead `forms` string from static module arrays.
+Do not change roles/permissions model beyond removing the dead `forms` string from static module arrays.
+
+Do not touch any other file.
 
 ## Report path
 
+Create report in `keyros-engine`:
+
 ```text
-agent-room/reports/2026-07-07-antenor-forms-permission-refs-report.md
+agent-room/reports/2026-07-07-antenor-remove-forms-module-strings-report.md
+```
+
+Use your own engine branch:
+
+```text
+antenor/remove-forms-module-strings-report
 ```
 
 ---
