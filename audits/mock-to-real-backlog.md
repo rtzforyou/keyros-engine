@@ -16,9 +16,27 @@ Every new feature must answer:
 
 ## Priority 1 — Must become real before commercial use
 
-### Payments tab
+### Payments tab — split into two different domains
 
-Status: mostly fake/local.
+Status: mostly fake/local today, but must be split before implementation.
+
+There are two different payment domains and they must not be mixed:
+
+1. Client payments inside the user's business
+   - Money paid by the studio's clients to the studio.
+   - Belongs to the user's business data.
+   - Feeds revenue, invoices, receipts, deals, dashboard and finance.
+   - Should work manually first: cash, bank transfer, card, external link, Twint/other future methods.
+
+2. App billing / subscriptions
+   - Money paid by Keyros customers to use the Keyros app.
+   - Belongs to Keyros platform operations, not to the user's client finance.
+   - Controls plans, subscription status, trials, limits and access.
+   - Should be designed separately from client payments.
+
+Stripe status: standby.
+
+Do not implement Stripe now. The immediate goal is to design the database and product boundaries so Stripe can be added later without rewriting the finance model.
 
 Evidence:
 
@@ -28,14 +46,24 @@ Evidence:
 - Export CSV opens a not-implemented alert.
 - Payout status is estimated as `stats.total * 0.95`.
 
-Required implementation:
+Required implementation for client payments:
 
-- Create real payments/invoices/transactions data model.
-- Persist payment records in Supabase.
-- Link payment to organization, contact, deal and optional appointment.
-- Replace fake Stripe checkout simulation with real payment provider flow or mark as manual payment until provider is ready.
-- Replace estimated payout with real payout/fee records or hide until integrated.
+- Create real client-side payment/invoice/transaction model in Supabase.
+- Persist payment records by organization.
+- Link payment to contact, deal and optional appointment.
+- Support manual payment methods first.
+- Mark external provider fields as nullable/future-ready.
+- Hide Stripe checkout simulation until provider integration is active.
+- Replace estimated payout with either real fee/payout data or hide it.
 - Add audit logs for refunds and payment status changes.
+
+Required implementation for app billing:
+
+- Create separate platform billing model.
+- Track organization plan, subscription status, trial status and limits.
+- Do not mix app subscriptions with the user's `financial_transactions`.
+- Add access control based on plan/status later.
+- Keep provider integration abstract so Stripe can be added later.
 
 ### Forms settings / consent forms
 
@@ -197,11 +225,13 @@ Required plan:
 
 ## Recommended implementation order
 
-1. Payments real model and persistence.
-2. Team members and permissions real model.
-3. Forms real persistence and versioning.
-4. Workflows decision: implement as real multi-step automations or remove tab.
-5. Calendar cleanup: remove mock contacts/tattooers dependency.
-6. Automations cleanup: real trigger registry and execution guarantees.
-7. Remove legacy dashboard/fallback calculations from `useMockData`.
-8. Retire `useMockData` completely.
+1. Split payments into client payments and app billing.
+2. Implement client payments manually first, without Stripe.
+3. Implement app billing model separately, with provider integration in standby.
+4. Team members and permissions real model.
+5. Forms real persistence and versioning.
+6. Workflows decision: implement as real multi-step automations or remove tab.
+7. Calendar cleanup: remove mock contacts/tattooers dependency.
+8. Automations cleanup: real trigger registry and execution guarantees.
+9. Remove legacy dashboard/fallback calculations from `useMockData`.
+10. Retire `useMockData` completely.
