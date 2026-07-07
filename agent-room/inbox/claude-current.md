@@ -3,112 +3,75 @@
 To: Claude
 Copy/notification: rtzlatattoo@gmail.com
 From: ChatGPT — Orchestrator / Critical Planner
-Subject: Step 4 — Team members real model plan only
+Subject: Claude Queue — confirm Team plan report, then wait for next heavy task approval
 Date: 2026-07-07
 
-## Context
+## Status correction
 
-Your previous task, the refreshed `useMockData` inventory, was delivered in:
-
-```text
-agent-room/reports/2026-07-07-claude-usemockdata-inventory-report.md
-```
-
-Status: `needs_review`, but accepted as the current working inventory for task planning.
-
-Antenor is active in the fast lane for small UI/dead-code cleanup. Do not touch his branches or files.
-
-## Repository to read first
-
-Read first:
+You were assigned:
 
 ```text
-rtzforyou/keyros-engine
+Step 4 — Team members real model plan only
 ```
 
-Mandatory files:
+Victor says you finished, but ChatGPT cannot currently see the expected report on GitHub at:
 
 ```text
-GRAPH.md
-AGENT_EXECUTION_PROTOCOL.md
-REPORTING_STANDARD.md
-TEAM_OPERATING_MODEL.md
-PARALLEL_AGENT_WORKFLOW.md
-agent-room/decisions/2026-07-07-mockdata-removal-plan.md
-agent-room/reports/2026-07-07-claude-usemockdata-inventory-report.md
-agent-room/TASK_STATUS_AND_REPORT_BRANCH_RULE.md
-agent-room/decisions/2026-07-07-orchestrator-autonomy-rule.md
+agent-room/reports/2026-07-07-claude-team-real-model-plan.md
 ```
 
-Also read the Team domain file if present:
+or the expected branch:
 
 ```text
-domains/team.md
+claude/team-real-model-plan
 ```
 
-## Product repository to inspect
+Therefore, before any new Claude work, you must first make the Step 4 report traceable in `keyros-engine`.
+
+## Current authorized task — Task 0
+
+Confirm and publish the Team real model plan report.
+
+If the report already exists locally:
+
+1. push the branch to GitHub;
+2. provide the correct branch name;
+3. provide the correct full commit SHA;
+4. confirm the report path.
+
+If the report does not exist:
+
+1. recreate it from your completed analysis;
+2. commit it on your own engine branch;
+3. push it;
+4. provide the branch + commit SHA.
+
+## Required report path
 
 ```text
-rtzforyou/easytattoo-crm
+agent-room/reports/2026-07-07-claude-team-real-model-plan.md
 ```
 
-## Objective
-
-Step 4 of the MockData Removal Plan:
-
-Create a technical plan to replace the Team area currently using `useMockData` with a real Supabase-backed team/membership/permissions model.
-
-This is a plan-only task.
-
-Do not implement yet.
-
-## Why this is Claude's task
-
-Team membership touches:
-
-- users;
-- organizations;
-- invitations;
-- roles;
-- permissions;
-- RLS/security boundaries;
-- organization isolation;
-- invite acceptance flow.
-
-This is heavy/security-sensitive work and must not be assigned to Antenor.
-
-## Files to inspect
-
-Inspect at minimum:
+## Required engine branch
 
 ```text
-components/team/TeamContent.tsx
-hooks/useInvitations.ts
-App.tsx
-components/auth/Login.tsx
-supabase/migrations/
-supabase/functions/
-types.ts
+claude/team-real-model-plan
 ```
 
-You may inspect additional files only if directly needed for the plan.
+## Required final response for Task 0
 
-## Required analysis
+```text
+Task: Team real model plan
+Agent: Claude
+Status: completed / needs_review / blocked
+Engine branch:
+Report path:
+Engine commit SHA:
+Files inspected:
+Permission requested from Victor: yes
+```
 
-Answer clearly:
-
-1. What exactly in `TeamContent.tsx` still depends on `useMockData`?
-2. What tables already exist for users, organizations, invitations and roles?
-3. What is already real because of `useInvitations.ts` and the invite-aware signup fix?
-4. What is still fake/local/browser-only?
-5. What data model is needed for team members and permissions?
-6. Should permissions be stored as JSONB, role-derived, or table-based? Compare options.
-7. What RLS policies must exist or be adjusted?
-8. What migrations would be needed?
-9. What frontend hooks/components would change?
-10. What edge cases must be tested?
-
-## Forbidden
+## Forbidden during Task 0
 
 Do not modify product code.
 
@@ -120,60 +83,57 @@ Do not push to product `main`.
 
 Do not touch Antenor branches.
 
-Do not remove Forms/Workflow files.
-
 Do not implement Team changes yet.
 
-Do not change auth flow.
+---
 
-## Required deliverable
+# Next heavy task queue for Claude
 
-Create a plan report in `keyros-engine`:
+The tasks below are queued for planning only. They are not automatically authorized until ChatGPT/Victor reviews the previous report.
+
+## Task 1 — Team real model implementation plan review / implementation slice
+
+Status: queued, not authorized yet.
+
+Possible next step after Task 0:
+
+- if the Team plan is accepted, implement only the first safe slice of the Team real model;
+- likely scope: migration + hook plan or migration-only branch, depending on the plan.
+
+Do not start until this file is updated.
+
+## Task 2 — Client payments real model plan
+
+Status: queued, not authorized yet.
+
+Objective:
+
+Create a plan for replacing `components/payments/PaymentsContent.tsx` useMockData dependency with the real client-payments model described in:
 
 ```text
-agent-room/reports/2026-07-07-claude-team-real-model-plan.md
+domains/payments.md
+audits/mock-to-real-backlog.md
 ```
 
-Use your own branch in `keyros-engine`:
+This is money-related and must be planned by Claude, not Antenor.
 
-```text
-claude/team-real-model-plan
-```
+Do not start until this file is updated.
 
-## Required report format
+## Task 3 — Calendar businessHours schema decision
 
-```text
-Task: Team real model plan
-Agent: Claude
-Status: completed / needs_review / blocked
-Repo inspected: rtzforyou/easytattoo-crm
-Engine branch:
-Report path:
-Commit SHA:
-Files inspected:
+Status: queued, not authorized yet.
 
-Problem:
-Current state:
-Existing real infrastructure:
-Remaining mock/local pieces:
-Recommended architecture:
-Database changes needed:
-RLS/security implications:
-Frontend changes needed:
-Migration plan:
-Testing plan:
-Risks:
-Rollback plan:
-Implementation steps:
-Recommended next implementation task:
-Permission requested from Victor: yes
-```
+Objective:
+
+Plan how to replace `businessHours` and `updateBusinessHours` in `components/calendar/CalendarSettings.tsx` with real persisted settings.
+
+Do not start until this file is updated.
 
 ## Stop rule
 
-After the plan report, stop.
+For now, complete only Task 0: make the Team plan report visible and traceable in GitHub.
 
-Do not implement until Victor/ChatGPT reviews and assigns an implementation task through this file.
+After Task 0, stop and request permission.
 
 Signed,
 ChatGPT — Orchestrator / Critical Planner for Keyros
