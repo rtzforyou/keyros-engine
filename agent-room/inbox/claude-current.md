@@ -3,23 +3,14 @@
 To: Claude
 Copy/notification: rtzlatattoo@gmail.com
 From: ChatGPT — Orchestrator / Critical Planner
-Subject: Claude Ultra Queue — sequential heavy tasks with approval gates
+Subject: Production verification gate — confirm merged work exists and deploy/test real system
 Date: 2026-07-07
 
-## Context
+## Why this task exists
 
-Victor is activating you for a heavier execution run.
+Victor is concerned that tasks are completing extremely fast and wants proof that work is actually present in `rtzforyou/easytattoo-crm` and verified in the running system, not only reported in chat.
 
-You may see a long queue, but you must execute only the currently authorized task.
-
-After each task:
-
-1. commit/report;
-2. return only summary metadata to Victor/ChatGPT;
-3. request authorization;
-4. stop.
-
-Do not silently continue to the next task.
+ChatGPT confirmed PR #2–#8 are merged in `rtzforyou/easytattoo-crm`. Now Claude must verify the product repository and deployment status from the actual repo state.
 
 ## Product repository
 
@@ -33,391 +24,167 @@ rtzforyou/easytattoo-crm
 rtzforyou/keyros-engine
 ```
 
-## Mandatory reading
+## Current authorized task
 
-Read before acting:
+Task V0 — Production verification/deploy audit for merged fast-lane work.
 
-```text
-GRAPH.md
-AGENT_EXECUTION_PROTOCOL.md
-REPORTING_STANDARD.md
-TEAM_OPERATING_MODEL.md
-PARALLEL_AGENT_WORKFLOW.md
-agent-room/TASK_STATUS_AND_REPORT_BRANCH_RULE.md
-agent-room/decisions/2026-07-07-orchestrator-autonomy-rule.md
-agent-room/reports/2026-07-07-claude-team-real-model-plan.md
-agent-room/reports/2026-07-07-claude-team-migration-slice-report.md
-```
+This task replaces the previously authorized Task 0 until completed.
 
-## Current PR status
+## Scope
 
-Team migration PR is open:
+Verify the merged work from PR #2–#8 is really present on product `main`, then verify/deploy the frontend so Victor can confirm in the real system.
+
+Merged PRs to verify:
 
 ```text
-PR #9 — feat(team): prepare real users permissions model migration
-Branch: claude/team-real-model-migration-slice
-Head: 9a2859f4bb6291664a74ad9810b969537f85271a
+PR #2 — chore: remove orphaned Forms and Workflow UI files
+PR #3 — chore: remove Forms from static module lists
+PR #4 — refactor(pipeline): extract formatters from mock data hook
+PR #5 — chore(messages): remove inactive mock data import from AI assistant
+PR #6 — refactor(automations): remove trigger labels from mock data hook
+PR #7 — feat(calendar): use real tattooers hook in Calendar settings
+PR #8 — chore(forms): remove orphaned FormFiller component
 ```
 
-ChatGPT opened the PR after Victor approval.
+PR #9 Team migration is open and must not be merged/applied in this task.
 
-Important:
+## Required verification against product main
+
+Checkout/update product `main` and verify:
 
 ```text
-PR opened/approved for review readiness only.
-Supabase production migration is NOT approved yet.
-Do not apply migration until a later explicit task says so.
+1. removed files are absent:
+   - components/settings/FormsSettings.tsx
+   - components/contacts/ContactFormsTab.tsx
+   - components/automations/WorkflowTabContent.tsx
+   - components/automations/WorkflowDialog.tsx
+   - components/automations/WorkflowItemCard.tsx
+   - components/forms/FormFiller.tsx
+
+2. forms is absent from static module lists:
+   - App.tsx
+   - components/auth/Login.tsx
+
+3. PipelineContent no longer imports useMockData only for formatters and uses lib/formatters.ts
+
+4. AIAssistantDialog no longer imports inactive useMockData
+
+5. AutomationsContent no longer imports useMockData for trigger labels and does not modify execution logic
+
+6. CalendarSettings uses hooks/useTattooers.ts for tattooers but still leaves businessHours untouched on mock until Claude/schema work
 ```
 
----
+## Required build/deploy verification
 
-# Global rules for this ultra queue
+Run:
 
-Execute only one task at a time.
+```text
+npm install or npm ci, according to the repo lockfile
+npm run build
+```
 
-Do not apply Supabase migrations unless the current task explicitly authorizes it.
+Then identify the real deployment mechanism from the repo and execute the correct deploy command if available and safe.
 
-Do not merge PRs unless the current task explicitly authorizes it.
+Do not guess. Inspect package scripts/config first.
+
+Examples of acceptable deploy evidence:
+
+```text
+Cloudflare Pages deploy command output
+Vercel deploy output
+GitHub Actions deployment run URL
+Netlify deploy output
+```
+
+If deploy cannot be executed from Claude's environment, report exactly why and provide the exact command Victor must run.
+
+## Required runtime smoke verification
+
+After deploy, or after build if deploy cannot be run, verify as much as possible:
+
+```text
+app loads without white screen
+Settings no longer shows Forms tab
+Automations still renders without Workflows tab
+Calendar Settings renders tattooers section
+Messages/AI Assistant opens without crash
+Pipeline renders without formatter errors
+```
+
+If browser access is unavailable, say so explicitly and do not claim UI verification.
+
+## Forbidden
+
+Do not merge PR #9.
+
+Do not apply Supabase migrations.
+
+Do not touch Supabase production.
+
+Do not change code unless the verification finds a build-breaking issue. If code change is required, stop and report `blocked/needs_fix` before modifying.
+
+Do not continue to Team tasks.
 
 Do not touch Antenor branches.
 
-Do not touch unrelated product areas.
+## Required report
 
-For every task, create/update a report in:
+Create report in keyros-engine:
 
 ```text
-keyros-engine/agent-room/reports/
+agent-room/reports/2026-07-07-claude-v0-production-verification-deploy-audit.md
 ```
 
-Final response to Victor/ChatGPT must be short:
+Use engine branch:
+
+```text
+claude/production-verification-deploy-audit
+```
+
+Report must include:
+
+```text
+Task: V0 — Production verification/deploy audit
+Agent: Claude
+Status: completed / blocked / needs_fix
+Product repo:
+Product branch verified:
+Product commit verified:
+PRs verified:
+Files confirmed absent:
+Files confirmed changed:
+Build command:
+Build result:
+Deploy mechanism detected:
+Deploy command executed:
+Deploy result / deploy URL:
+Runtime smoke verification:
+What could not be verified:
+Remote changes:
+Supabase touched: no
+PR #9 touched: no
+Risks:
+Next recommended task:
+Permission requested from Victor: yes
+```
+
+## Final response format
+
+Do not paste the full report into chat.
+
+Return only:
 
 ```text
 Task:
 Status:
 Product branch:
 Product commit:
-PR:
+Deploy result:
+Deploy URL:
 Report path:
 Engine commit:
 Permission requested:
 ```
-
-Do not paste long reports into chat.
-
----
-
-# Task 0 — PR #9 merge-readiness check
-
-## Status
-
-Current authorized task.
-
-## Objective
-
-Check PR #9 for merge readiness after the latest main updates.
-
-This is review/check only.
-
-## Required checks
-
-Verify:
-
-```text
-PR #9 still has exactly one migration file
-no frontend/hooks/components changed
-no Supabase production apply happened
-migration includes guard against non-admin self-escalation
-migration includes rollback notes in report
-```
-
-## Forbidden
-
-Do not merge PR #9.
-
-Do not apply migration.
-
-Do not modify product code unless PR #9 is stale/broken and requires a small rebase/revision.
-
-If a revision is needed, stop and report `needs_revision`.
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-claude-task0-pr9-merge-readiness-report.md
-```
-
-## Stop after Task 0
-
-Stop and request authorization for Task 1.
-
----
-
-# Task 1 — Apply/test plan for Team migration
-
-## Status
-
-Queued. Not authorized until Task 0 is reviewed.
-
-## Objective
-
-Create an exact apply/test/rollback runbook for PR #9 migration.
-
-No production apply yet unless explicitly authorized later.
-
-## Required output
-
-Include SQL/test plan for:
-
-```text
-normal signup without invite
-signup with pending invite
-member updates own full_name/avatar_url -> allowed
-member updates own permissions -> blocked
-member updates own role -> blocked
-member updates own organization_id -> blocked
-admin updates member permissions -> allowed
-admin updates member role -> allowed
-rollback plan
-```
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-claude-task1-team-migration-apply-test-runbook.md
-```
-
-## Stop after Task 1
-
-Stop and request authorization for Task 2.
-
----
-
-# Task 2 — Apply Team migration and verify in Supabase
-
-## Status
-
-Queued. Not authorized until Victor explicitly approves production apply.
-
-## Objective
-
-Apply PR #9 migration to Supabase and run the approved verification plan.
-
-## Forbidden until explicit approval
-
-Do not run this task just because it is listed here.
-
-Only execute if Victor/ChatGPT explicitly says:
-
-```text
-Approve Task 2 — apply Team migration to Supabase
-```
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-claude-task2-team-migration-apply-verification-report.md
-```
-
-## Stop after Task 2
-
-Stop and request authorization for Task 3.
-
----
-
-# Task 3 — Team members hook plan/read-only implementation
-
-## Status
-
-Queued. Not authorized until migration is applied and verified.
-
-## Objective
-
-Create `hooks/useTeamMembers.ts` and, if authorized in that task, wire read-only Team members listing.
-
-Prefer split if risk is high:
-
-```text
-Task 3A: hook only
-Task 3B: TeamContent read-only wiring
-```
-
-## Forbidden
-
-Do not change Login permission enforcement yet.
-
-Do not implement removeMember yet.
-
-Do not modify RLS unless explicitly scoped.
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-claude-task3-use-team-members-report.md
-```
-
-## Stop after Task 3
-
-Stop and request authorization for Task 4.
-
----
-
-# Task 4 — Team role/permissions editing
-
-## Status
-
-Queued. Not authorized until Team read-only listing works.
-
-## Objective
-
-Allow admin to update team member role and permissions using the real `public.users` model.
-
-## Forbidden
-
-Do not change Login enforcement yet unless explicitly included.
-
-Do not implement remove member yet.
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-claude-task4-team-edit-role-permissions-report.md
-```
-
-## Stop after Task 4
-
-Stop and request authorization for Task 5.
-
----
-
-# Task 5 — Login permission enforcement plan and implementation
-
-## Status
-
-Queued. Not authorized until Team editing works.
-
-## Objective
-
-Stop granting all modules blindly in Login.
-
-Implement real permission resolution:
-
-```text
-admin -> all active modules
-non-admin -> permissions from public.users.permissions
-```
-
-## Required caution
-
-Avoid locking users out.
-
-Keep an emergency fallback plan.
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-claude-task5-login-permission-enforcement-report.md
-```
-
-## Stop after Task 5
-
-Stop and request authorization for Task 6.
-
----
-
-# Task 6 — removeMember decision and soft-remove design
-
-## Status
-
-Queued. Not authorized until permission enforcement is stable.
-
-## Objective
-
-Design and implement the first safe remove member path.
-
-Default recommendation:
-
-```text
-soft remove / disabled / revoked access
-```
-
-Hard delete via service_role Edge Function is not authorized unless Victor explicitly chooses it.
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-claude-task6-team-remove-member-report.md
-```
-
-## Stop after Task 6
-
-Stop and request authorization for Task 7.
-
----
-
-# Task 7 — Client payments real model plan
-
-## Status
-
-Queued. Not authorized until Team critical path is stable or Victor reprioritizes.
-
-## Objective
-
-Plan replacement of `components/payments/PaymentsContent.tsx` mock dependency with real client payments model.
-
-Separate clearly:
-
-```text
-client payments
-app billing/subscription
-expenses
-financial dashboard
-```
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-claude-task7-client-payments-real-model-plan.md
-```
-
-## Stop after Task 7
-
-Stop and request authorization for Task 8.
-
----
-
-# Task 8 — Business Hours schema plan
-
-## Status
-
-Queued. Not authorized until Team/Payments priority is decided.
-
-## Objective
-
-Plan persisted business hours for `CalendarSettings.tsx`.
-
-Compare:
-
-```text
-organization_business_hours table
-organization_settings JSONB
-hybrid
-```
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-claude-task8-business-hours-schema-plan.md
-```
-
-## Stop after Task 8
-
-Stop and request next queue.
-
----
-
-## Final instruction
-
-Current authorized task is Task 0 only.
 
 Signed,
 ChatGPT — Orchestrator / Critical Planner for Keyros
