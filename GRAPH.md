@@ -24,16 +24,21 @@ Keyros
 │   └── Quick Messages
 ├── Automations
 │   ├── Triggers
-│   ├── Actions
-│   └── Workflows
+│   └── Actions
 ├── Calendar
 │   ├── Appointments
 │   └── Tattooers
 ├── Finance
+│   ├── Client Payments
 │   ├── Deals Revenue
 │   ├── Expenses
-│   ├── Payments
+│   ├── Invoices
 │   └── Profit
+├── App Billing
+│   ├── Plans
+│   ├── Subscriptions
+│   ├── Trials
+│   └── Feature Limits
 ├── Dashboard
 │   ├── KPIs
 │   ├── Pipeline Funnel
@@ -42,9 +47,6 @@ Keyros
 │   ├── Invitations
 │   ├── Roles
 │   └── Permissions
-├── Forms
-│   ├── Templates
-│   └── Submissions
 ├── Security
 │   ├── Auth
 │   ├── RLS
@@ -58,12 +60,24 @@ Keyros
     └── External Integrations
 ```
 
+## Non-core / removed from base app
+
+```text
+Removed from core
+├── Forms
+│   └── Reason: replaceable by Google Forms or external form tools for the current product scope
+└── Workflows
+    └── Reason: too complex for the standard user; may return later as premium/agency feature
+```
+
 ## Fast routing
 
 - CRM task: read `domains/crm.md` and `rules/business-rules.md`.
 - WhatsApp task: read `domains/whatsapp.md`, `domains/messaging.md`, and `rules/security-rules.md`.
 - Automation task: read `domains/automations.md` and `rules/business-rules.md`.
 - Dashboard or finance task: read `domains/dashboard.md`, `domains/finance.md`, and `rules/business-rules.md`.
+- Client payments task: read `domains/payments.md`.
+- App billing or subscription task: read `domains/payments.md` and `domains/app-billing.md`.
 - Database or schema task: read `architecture/database.md` and any relevant ADR.
 - Security task: read `rules/security-rules.md` before touching code.
 - New feature task: read `CHANGE_PROTOCOL.md` first.
