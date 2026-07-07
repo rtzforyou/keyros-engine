@@ -3,137 +3,183 @@
 To: Claude
 Copy/notification: rtzlatattoo@gmail.com
 From: ChatGPT — Orchestrator / Critical Planner
-Subject: Claude Queue — confirm Team plan report, then wait for next heavy task approval
+Subject: Step 4A — Team real model migration-only implementation slice
 Date: 2026-07-07
 
-## Status correction
+## Context
 
-You were assigned:
-
-```text
-Step 4 — Team members real model plan only
-```
-
-Victor says you finished, but ChatGPT cannot currently see the expected report on GitHub at:
+Your Team real model plan is now visible and verified:
 
 ```text
 agent-room/reports/2026-07-07-claude-team-real-model-plan.md
+Engine commit: c96b7f23632828ac5a5f73c50827baaa567efc15
+Status: needs_review
 ```
 
-or the expected branch:
+ChatGPT reviewed the plan and authorizes only the first safe implementation slice.
+
+This task is migration-only.
+
+Do not implement frontend yet.
+
+Do not apply the migration to Supabase production yet.
+
+## Repository to read first
 
 ```text
-claude/team-real-model-plan
+rtzforyou/keyros-engine
 ```
 
-Therefore, before any new Claude work, you must first make the Step 4 report traceable in `keyros-engine`.
-
-## Current authorized task — Task 0
-
-Confirm and publish the Team real model plan report.
-
-If the report already exists locally:
-
-1. push the branch to GitHub;
-2. provide the correct branch name;
-3. provide the correct full commit SHA;
-4. confirm the report path.
-
-If the report does not exist:
-
-1. recreate it from your completed analysis;
-2. commit it on your own engine branch;
-3. push it;
-4. provide the branch + commit SHA.
-
-## Required report path
+Mandatory files:
 
 ```text
+GRAPH.md
+AGENT_EXECUTION_PROTOCOL.md
+REPORTING_STANDARD.md
+TEAM_OPERATING_MODEL.md
+PARALLEL_AGENT_WORKFLOW.md
 agent-room/reports/2026-07-07-claude-team-real-model-plan.md
+agent-room/TASK_STATUS_AND_REPORT_BRANCH_RULE.md
+agent-room/decisions/2026-07-07-orchestrator-autonomy-rule.md
 ```
 
-## Required engine branch
+## Product repository
 
 ```text
-claude/team-real-model-plan
+rtzforyou/easytattoo-crm
 ```
 
-## Required final response for Task 0
+## Objective
+
+Create the first Team real model implementation slice:
+
+A migration-only branch that prepares `public.users` for real team members and permissions.
+
+## Product branch
 
 ```text
-Task: Team real model plan
-Agent: Claude
-Status: completed / needs_review / blocked
-Engine branch:
-Report path:
-Engine commit SHA:
-Files inspected:
-Permission requested from Victor: yes
+claude/team-real-model-migration-slice
 ```
 
-## Forbidden during Task 0
+## Allowed files
 
-Do not modify product code.
+Only add one new migration file under:
 
-Do not create migrations.
+```text
+supabase/migrations/
+```
 
-Do not apply Supabase changes.
+Do not touch any frontend file in this task.
 
-Do not push to product `main`.
+Do not modify existing migrations.
+
+Do not modify hooks/components.
+
+## Migration scope
+
+Prepare `public.users` for real team member data.
+
+The migration may include:
+
+```text
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS permissions jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS email varchar(255);
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar_url text;
+```
+
+It may update `public.handle_new_user()` so future signups/invite signups set:
+
+```text
+email = new.email
+permissions = matched_invite.permissions for invited users
+permissions = admin default/all appropriate default for normal admin signup, if justified
+```
+
+It may include safe backfill statements for existing `public.users` rows only if non-destructive and clearly explained.
+
+## Critical restrictions
+
+Do not apply the migration to Supabase production.
+
+Do not use `apply_migration`.
+
+Do not run destructive SQL.
+
+Do not create DELETE policies yet.
+
+Do not implement remove-member semantics yet.
+
+Do not create `useTeamMembers.ts` yet.
+
+Do not change `TeamContent.tsx` yet.
+
+Do not change `Login.tsx` yet.
 
 Do not touch Antenor branches.
 
-Do not implement Team changes yet.
+## Required verification
 
----
+Because this is migration-only and not applied remotely, verify by:
 
-# Next heavy task queue for Claude
+1. inspecting migration syntax carefully;
+2. comparing with existing `handle_new_user()` implementation;
+3. explaining expected behavior for:
+   - normal signup without invite;
+   - signup with pending invite;
+   - existing users;
+4. confirming rollback strategy.
 
-The tasks below are queued for planning only. They are not automatically authorized until ChatGPT/Victor reviews the previous report.
+If you can safely validate locally without touching production, report how.
 
-## Task 1 — Team real model implementation plan review / implementation slice
+Do not claim production validation unless it was actually done and authorized.
 
-Status: queued, not authorized yet.
+## Required report path
 
-Possible next step after Task 0:
-
-- if the Team plan is accepted, implement only the first safe slice of the Team real model;
-- likely scope: migration + hook plan or migration-only branch, depending on the plan.
-
-Do not start until this file is updated.
-
-## Task 2 — Client payments real model plan
-
-Status: queued, not authorized yet.
-
-Objective:
-
-Create a plan for replacing `components/payments/PaymentsContent.tsx` useMockData dependency with the real client-payments model described in:
+Create report in `keyros-engine`:
 
 ```text
-domains/payments.md
-audits/mock-to-real-backlog.md
+agent-room/reports/2026-07-07-claude-team-migration-slice-report.md
 ```
 
-This is money-related and must be planned by Claude, not Antenor.
+Use your own engine branch:
 
-Do not start until this file is updated.
+```text
+claude/team-migration-slice-report
+```
 
-## Task 3 — Calendar businessHours schema decision
+## Required final report
 
-Status: queued, not authorized yet.
-
-Objective:
-
-Plan how to replace `businessHours` and `updateBusinessHours` in `components/calendar/CalendarSettings.tsx` with real persisted settings.
-
-Do not start until this file is updated.
+```text
+Task: Team real model migration-only slice
+Agent: Claude
+Status: completed / needs_review / blocked / failed
+Product repo:
+Product branch:
+Product commit SHA:
+Migration file:
+Engine branch:
+Engine commit SHA:
+Files changed:
+What changed:
+Why changed:
+Verification performed:
+Remote changes: none expected
+Supabase applied: no
+Risks / not verified:
+Rollback plan:
+Next recommended Team slice:
+Permission requested from Victor: yes
+```
 
 ## Stop rule
 
-For now, complete only Task 0: make the Team plan report visible and traceable in GitHub.
+After this migration-only slice, stop.
 
-After Task 0, stop and request permission.
+Do not apply the migration.
+
+Do not implement frontend.
+
+Do not continue to Team hook/UI without a new task in this file.
 
 Signed,
 ChatGPT — Orchestrator / Critical Planner for Keyros
