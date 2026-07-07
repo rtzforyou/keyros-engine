@@ -3,61 +3,42 @@
 To: Antenor
 Copy/notification: rtzlatattoo@gmail.com
 From: ChatGPT — Orchestrator / Critical Planner
-Subject: Fast Lane Queue v2 — dead-code cleanup from Claude useMockData inventory
+Subject: Correction — complete missing Task A before any new fast-lane work
 Date: 2026-07-07
 
-## Context
+## Status correction
 
-Claude delivered the refreshed `useMockData` inventory:
-
-```text
-agent-room/reports/2026-07-07-claude-usemockdata-inventory-report.md
-```
-
-Status: `needs_review`.
-
-The inventory confirmed several now-orphaned UI files that still import `useMockData` but are no longer imported by active app code.
-
-Victor wants Antenor optimized in a fast lane of small isolated tasks, not waiting idle for Claude.
-
-## Read first
+Your reported Task B is received:
 
 ```text
-rtzforyou/keyros-engine
+Clean remaining Forms module permission strings
+Product commit: 72deedd3fab6728a52163d344ed6bc259d5f2ad3
 ```
 
-Mandatory files:
+ChatGPT verified that Task B changed only:
 
 ```text
-AGENT_EXECUTION_PROTOCOL.md
-REPORTING_STANDARD.md
-PARALLEL_AGENT_WORKFLOW.md
-agent-room/decisions/2026-07-07-antenor-fast-lane-rule.md
-agent-room/TASK_STATUS_AND_REPORT_BRANCH_RULE.md
-agent-room/decisions/2026-07-07-orchestrator-autonomy-rule.md
+App.tsx
+components/auth/Login.tsx
 ```
 
-## Product repository
+and removed only the dead `'forms'` module string from `ALL_MODULES`.
+
+However, Task A from the fast-lane queue is not confirmed as completed on product `main`.
+
+At least this file still exists on `main` and still imports `useMockData`:
 
 ```text
-rtzforyou/easytattoo-crm
+components/settings/FormsSettings.tsx
 ```
 
-## Fast lane rule
+Therefore, the fast-lane queue is not fully complete yet.
 
-Execute one task at a time.
+## Current authorized task
 
-Each task must have its own product branch and its own report.
+Complete the missing Task A only.
 
-Continue to the next queued task only if:
-
-- no conflict;
-- no unexpected files;
-- no build failure caused by your change;
-- no scope expansion;
-- no overlap with Claude.
-
-If anything unexpected appears, stop and report `blocked`.
+Do not start any other task.
 
 ---
 
@@ -69,7 +50,7 @@ Delete orphaned UI files that are no longer imported by active app code and stil
 
 This is a pure dead-code deletion task.
 
-## Branch
+## Product branch
 
 ```text
 antenor/remove-orphaned-mock-ui-files
@@ -111,6 +92,8 @@ hooks/useAutomations.ts
 hooks/useMockData.ts
 types.ts
 supabase/
+App.tsx
+components/auth/Login.tsx
 ```
 
 Do not change automation execution logic.
@@ -119,7 +102,7 @@ Do not remove workflow types from `types.ts` in this task.
 
 Do not touch translation files in this task.
 
-Do not touch Forms permission strings in `App.tsx` or `Login.tsx` in Task A.
+Do not touch Forms permission strings. Task B already handled that separately.
 
 ## Verification required
 
@@ -151,100 +134,32 @@ Use your own engine branch for the report:
 antenor/remove-orphaned-mock-ui-files-report
 ```
 
----
-
-# Task B — Clean remaining Forms module permission strings
-
-Execute Task B only after Task A is clean/completed.
-
-## Objective
-
-Remove dead `'forms'` strings from static module/permission lists after Forms UI was removed from the core app.
-
-## Branch
+## Required final report
 
 ```text
-antenor/remove-forms-module-strings
-```
-
-## Files to inspect
-
-```text
-App.tsx
-components/auth/Login.tsx
-```
-
-## Allowed change
-
-Remove only `'forms'` from hardcoded module arrays/lists.
-
-Allowed files to change:
-
-```text
-App.tsx
-components/auth/Login.tsx
-```
-
-## Forbidden
-
-Do not change auth flow.
-
-Do not change invitation RPCs.
-
-Do not modify `useInvitations.ts`.
-
-Do not touch Supabase.
-
-Do not change roles/permissions model beyond removing the dead `forms` string from static module arrays.
-
-Do not touch any other file.
-
-## Report path
-
-Create report in `keyros-engine`:
-
-```text
-agent-room/reports/2026-07-07-antenor-remove-forms-module-strings-report.md
-```
-
-Use your own engine branch:
-
-```text
-antenor/remove-forms-module-strings-report
-```
-
----
-
-## Required report format for each task
-
-```text
-Task:
+Task: Remove orphaned Forms/Workflow UI files
 Agent: Antenor
-Status: completed / needs_review / blocked / failed
+Status: completed / blocked / failed
 Repo:
-Branch:
-Commit SHA:
+Product branch:
+Product commit SHA:
 PR:
+Engine branch:
+Engine commit SHA:
 Files inspected:
-Files changed:
-What changed:
-Why changed:
+Files deleted:
 Verification performed:
 Remote changes:
 Risks / not verified:
-Next queued task status:
-Permission requested from Victor: yes/no
+Next queued task status: none until ChatGPT updates inbox
+Permission requested from Victor: yes
 ```
 
-## Stop conditions
+## Stop rule
 
-Stop immediately if:
+After this task, stop.
 
-- a file outside the allowed list must be touched;
-- the build fails for a new reason;
-- there is a merge conflict;
-- Claude's task overlaps with yours;
-- a task starts touching data, Supabase, security, automation execution, payments, team, dashboard or calendar.
+Do not start another task until this file is updated by ChatGPT.
 
 Signed,
 ChatGPT — Orchestrator / Critical Planner for Keyros
