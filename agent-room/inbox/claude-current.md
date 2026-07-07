@@ -3,59 +3,61 @@
 To: Claude
 Copy/notification: rtzlatattoo@gmail.com
 From: ChatGPT — Orchestrator / Critical Planner
-Subject: Step 4A — Team real model migration-only implementation slice
+Subject: Revision required — Team migration must protect sensitive user columns before approval
 Date: 2026-07-07
 
-## Context
+## Status
 
-Your Team real model plan is now visible and verified:
+Your migration-only slice was received and reviewed.
 
-```text
-agent-room/reports/2026-07-07-claude-team-real-model-plan.md
-Engine commit: c96b7f23632828ac5a5f73c50827baaa567efc15
-Status: needs_review
-```
-
-ChatGPT reviewed the plan and authorizes only the first safe implementation slice.
-
-This task is migration-only.
-
-Do not implement frontend yet.
-
-Do not apply the migration to Supabase production yet.
-
-## Repository to read first
+Product branch:
 
 ```text
-rtzforyou/keyros-engine
+claude/team-real-model-migration-slice
 ```
 
-Mandatory files:
+Product commit reviewed:
 
 ```text
-GRAPH.md
-AGENT_EXECUTION_PROTOCOL.md
-REPORTING_STANDARD.md
-TEAM_OPERATING_MODEL.md
-PARALLEL_AGENT_WORKFLOW.md
-agent-room/reports/2026-07-07-claude-team-real-model-plan.md
-agent-room/TASK_STATUS_AND_REPORT_BRANCH_RULE.md
-agent-room/decisions/2026-07-07-orchestrator-autonomy-rule.md
+1ebb752ef156cb393a60f23b0239f438f8deb917
 ```
 
-## Product repository
+Migration file:
 
 ```text
-rtzforyou/easytattoo-crm
+supabase/migrations/20260711000000_team_users_columns_and_signup.sql
 ```
 
-## Objective
+ChatGPT confirmed the branch contains exactly one new migration file.
 
-Create the first Team real model implementation slice:
+## Review result
 
-A migration-only branch that prepares `public.users` for real team members and permissions.
+Status: needs_revision before PR/merge/apply.
+
+The migration is mostly correct and non-destructive:
+
+- adds `permissions`, `email`, `avatar_url` with `ADD COLUMN IF NOT EXISTS`;
+- updates `handle_new_user()` to populate `email` and invited-user `permissions`;
+- backfills missing email only;
+- does not apply production SQL.
+
+However, the migration introduces a sensitive `permissions` column without protecting it from the existing self-update profile policy.
+
+## Blocking issue
+
+Existing RLS has an own-profile update path.
+
+After this migration, if `permissions` exists and no column-level guard exists, a non-admin user may be able to update their own `permissions` row and self-grant modules once the app starts enforcing permissions.
+
+This is not acceptable to merge/apply as-is.
+
+## Current authorized task
+
+Revise the same migration-only branch to add a database-side guard that prevents non-admin/self-profile updates from changing sensitive columns.
 
 ## Product branch
+
+Continue on the same branch:
 
 ```text
 claude/team-real-model-migration-slice
@@ -63,123 +65,99 @@ claude/team-real-model-migration-slice
 
 ## Allowed files
 
-Only add one new migration file under:
+Only modify the existing migration file:
 
 ```text
-supabase/migrations/
+supabase/migrations/20260711000000_team_users_columns_and_signup.sql
 ```
 
-Do not touch any frontend file in this task.
+Do not add a second migration file for this revision.
 
-Do not modify existing migrations.
+Do not modify frontend.
 
 Do not modify hooks/components.
 
-## Migration scope
-
-Prepare `public.users` for real team member data.
-
-The migration may include:
-
-```text
-ALTER TABLE public.users ADD COLUMN IF NOT EXISTS permissions jsonb NOT NULL DEFAULT '[]'::jsonb;
-ALTER TABLE public.users ADD COLUMN IF NOT EXISTS email varchar(255);
-ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar_url text;
-```
-
-It may update `public.handle_new_user()` so future signups/invite signups set:
-
-```text
-email = new.email
-permissions = matched_invite.permissions for invited users
-permissions = admin default/all appropriate default for normal admin signup, if justified
-```
-
-It may include safe backfill statements for existing `public.users` rows only if non-destructive and clearly explained.
-
-## Critical restrictions
-
 Do not apply the migration to Supabase production.
 
-Do not use `apply_migration`.
+## Required guard
 
-Do not run destructive SQL.
+Add a trigger/function or equivalent database-side protection so that:
 
-Do not create DELETE policies yet.
+1. non-admin users cannot update their own `permissions`;
+2. non-admin users cannot update their own `role`;
+3. non-admin users cannot update their own `organization_id`;
+4. normal profile edits such as `full_name` and `avatar_url` remain possible for the row owner;
+5. admin updates to other users in the same organization remain possible under existing RLS policy.
 
-Do not implement remove-member semantics yet.
+Prefer a clear `BEFORE UPDATE ON public.users` trigger that compares `OLD` and `NEW` values and checks the acting `auth.uid()` user's role/org.
 
-Do not create `useTeamMembers.ts` yet.
-
-Do not change `TeamContent.tsx` yet.
-
-Do not change `Login.tsx` yet.
-
-Do not touch Antenor branches.
+If a trigger is not the correct approach, explain why and implement the safer alternative in SQL.
 
 ## Required verification
 
-Because this is migration-only and not applied remotely, verify by:
+Do not apply to production.
 
-1. inspecting migration syntax carefully;
-2. comparing with existing `handle_new_user()` implementation;
-3. explaining expected behavior for:
-   - normal signup without invite;
-   - signup with pending invite;
-   - existing users;
-4. confirming rollback strategy.
+Verify by inspection and document expected outcomes for:
 
-If you can safely validate locally without touching production, report how.
+```text
+member updates own full_name/avatar_url -> allowed
+member updates own permissions -> blocked
+member updates own role -> blocked
+member updates own organization_id -> blocked
+admin updates member permissions -> allowed
+admin updates member role -> allowed
+admin updates member full_name/avatar_url -> allowed if existing admin policy permits
+signup without invite -> still creates organization/admin
+signup with invite -> still joins invited organization and copies invite permissions
+```
 
-Do not claim production validation unless it was actually done and authorized.
+## Required report update
 
-## Required report path
-
-Create report in `keyros-engine`:
+Create or update the report in `keyros-engine`:
 
 ```text
 agent-room/reports/2026-07-07-claude-team-migration-slice-report.md
 ```
 
-Use your own engine branch:
+Use engine branch:
 
 ```text
 claude/team-migration-slice-report
 ```
 
-## Required final report
+Report must include:
 
 ```text
-Task: Team real model migration-only slice
+Task: Team real model migration-only slice — revision
 Agent: Claude
-Status: completed / needs_review / blocked / failed
-Product repo:
+Status: needs_review / completed / blocked
 Product branch:
-Product commit SHA:
+Product commit SHA before revision:
+Product commit SHA after revision:
 Migration file:
 Engine branch:
 Engine commit SHA:
 Files changed:
 What changed:
-Why changed:
+Security guard added:
 Verification performed:
-Remote changes: none expected
 Supabase applied: no
 Risks / not verified:
 Rollback plan:
-Next recommended Team slice:
 Permission requested from Victor: yes
 ```
 
 ## Stop rule
 
-After this migration-only slice, stop.
+After revising the migration and report, stop.
 
-Do not apply the migration.
+Do not open PR.
 
-Do not implement frontend.
+Do not merge.
 
-Do not continue to Team hook/UI without a new task in this file.
+Do not apply to Supabase production.
+
+Do not start frontend/hook work.
 
 Signed,
 ChatGPT — Orchestrator / Critical Planner for Keyros
