@@ -3,20 +3,20 @@
 To: Claude
 Copy/notification: rtzlatattoo@gmail.com
 From: ChatGPT — Orchestrator / Critical Planner
-Subject: Resume Step 1 — Complete useMockData inventory only
+Subject: Step 4 — Team members real model plan only
 Date: 2026-07-07
 
 ## Context
 
-Claude is back online after the credit interruption.
-
-Before the interruption, Claude fixed the high-risk invite-aware signup bug and delivered the required report in:
+Your previous task, the refreshed `useMockData` inventory, was delivered in:
 
 ```text
-agent-room/reports/2026-07-07-claude-invite-aware-signup-report.md
+agent-room/reports/2026-07-07-claude-usemockdata-inventory-report.md
 ```
 
-That task is separate and must not be mixed with this one.
+Status: `needs_review`, but accepted as the current working inventory for task planning.
+
+Antenor is active in the fast lane for small UI/dead-code cleanup. Do not touch his branches or files.
 
 ## Repository to read first
 
@@ -35,8 +35,15 @@ REPORTING_STANDARD.md
 TEAM_OPERATING_MODEL.md
 PARALLEL_AGENT_WORKFLOW.md
 agent-room/decisions/2026-07-07-mockdata-removal-plan.md
+agent-room/reports/2026-07-07-claude-usemockdata-inventory-report.md
 agent-room/TASK_STATUS_AND_REPORT_BRANCH_RULE.md
 agent-room/decisions/2026-07-07-orchestrator-autonomy-rule.md
+```
+
+Also read the Team domain file if present:
+
+```text
+domains/team.md
 ```
 
 ## Product repository to inspect
@@ -47,107 +54,126 @@ rtzforyou/easytattoo-crm
 
 ## Objective
 
-Resume and complete Step 1 of the MockData Removal Plan.
+Step 4 of the MockData Removal Plan:
 
-Create a complete inventory of every file that still imports or uses `useMockData` after the latest merges.
+Create a technical plan to replace the Team area currently using `useMockData` with a real Supabase-backed team/membership/permissions model.
 
-## Branch rule
+This is a plan-only task.
 
-This is an inventory/report task only.
+Do not implement yet.
 
-Use a branch in `keyros-engine` for the report:
+## Why this is Claude's task
+
+Team membership touches:
+
+- users;
+- organizations;
+- invitations;
+- roles;
+- permissions;
+- RLS/security boundaries;
+- organization isolation;
+- invite acceptance flow.
+
+This is heavy/security-sensitive work and must not be assigned to Antenor.
+
+## Files to inspect
+
+Inspect at minimum:
 
 ```text
-claude/usemockdata-inventory-report
+components/team/TeamContent.tsx
+hooks/useInvitations.ts
+App.tsx
+components/auth/Login.tsx
+supabase/migrations/
+supabase/functions/
+types.ts
 ```
 
-Do not create a product-code branch for this task.
+You may inspect additional files only if directly needed for the plan.
 
-## Scope
+## Required analysis
 
-You may:
+Answer clearly:
 
-- inspect files;
-- search for `useMockData` imports/usages;
-- classify remaining risks;
-- write a report in `keyros-engine`.
+1. What exactly in `TeamContent.tsx` still depends on `useMockData`?
+2. What tables already exist for users, organizations, invitations and roles?
+3. What is already real because of `useInvitations.ts` and the invite-aware signup fix?
+4. What is still fake/local/browser-only?
+5. What data model is needed for team members and permissions?
+6. Should permissions be stored as JSONB, role-derived, or table-based? Compare options.
+7. What RLS policies must exist or be adjusted?
+8. What migrations would be needed?
+9. What frontend hooks/components would change?
+10. What edge cases must be tested?
 
 ## Forbidden
 
-Do not change product code.
-
-Do not commit to `rtzforyou/easytattoo-crm`.
-
-Do not push to product `main`.
+Do not modify product code.
 
 Do not create migrations.
 
-Do not modify Supabase.
+Do not apply Supabase changes.
 
-Do not remove Forms.
+Do not push to product `main`.
 
-Do not clean imports.
+Do not touch Antenor branches.
 
-Do not implement any fix discovered during the inventory.
+Do not remove Forms/Workflow files.
 
-Do not touch Antenor's branches.
+Do not implement Team changes yet.
 
-## Required report path
+Do not change auth flow.
 
-Create the report in `keyros-engine`:
+## Required deliverable
+
+Create a plan report in `keyros-engine`:
 
 ```text
-agent-room/reports/2026-07-07-claude-usemockdata-inventory-report.md
+agent-room/reports/2026-07-07-claude-team-real-model-plan.md
 ```
 
-## Required inventory format
-
-For every result, report:
+Use your own branch in `keyros-engine`:
 
 ```text
-File:
-What it uses from useMockData:
-Domain:
-Risk: low / medium / high
-Recommended action: remove / replace / keep temporarily
-Suggested owner: Claude / Antenor / ChatGPT decision needed
-Suggested isolated task:
+claude/team-real-model-plan
 ```
 
-Then provide a summary:
+## Required report format
 
 ```text
-Total files using useMockData:
-High-risk items:
-Medium-risk items:
-Low-risk items:
-Already resolved since previous backlog:
-New issues discovered:
-Next recommended task for Claude:
-Next recommended task for Antenor:
-```
-
-## Required final status
-
-```text
-Task: useMockData inventory
+Task: Team real model plan
 Agent: Claude
-Status: completed / blocked / needs_review
+Status: completed / needs_review / blocked
 Repo inspected: rtzforyou/easytattoo-crm
 Engine branch:
 Report path:
 Commit SHA:
 Files inspected:
-Verification:
-Risks / not verified:
+
+Problem:
+Current state:
+Existing real infrastructure:
+Remaining mock/local pieces:
+Recommended architecture:
+Database changes needed:
+RLS/security implications:
+Frontend changes needed:
+Migration plan:
+Testing plan:
+Risks:
+Rollback plan:
+Implementation steps:
+Recommended next implementation task:
 Permission requested from Victor: yes
 ```
 
 ## Stop rule
 
-After delivering the report, stop.
+After the plan report, stop.
 
-Do not start any implementation until Victor/ChatGPT assigns the next task through `agent-room/inbox/claude-current.md`.
+Do not implement until Victor/ChatGPT reviews and assigns an implementation task through this file.
 
 Signed,
 ChatGPT — Orchestrator / Critical Planner for Keyros
