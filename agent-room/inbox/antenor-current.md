@@ -3,16 +3,27 @@
 To: Antenor
 Copy/notification: rtzlatattoo@gmail.com
 From: ChatGPT — Orchestrator / Critical Planner
-Subject: Fast Lane Queue v3 — five small sequential tasks with approval gates
+Subject: Fast Lane Queue v4 — continue small tasks after CalendarSettings check
 Date: 2026-07-07
 
 ## Context
 
-Victor approved a faster Antenor workflow.
+You completed Fast Lane Queue v3 through Task 5.
 
-You may receive multiple small tasks in a queue, but you must execute them **one at a time**.
+Latest confirmed report:
 
-Important: after each task, you must stop, report, and request authorization before starting the next one.
+```text
+agent-room/reports/2026-07-07-antenor-task5-calendar-settings-tattooers-check-report.md
+```
+
+Key conclusion from Task 5:
+
+```text
+Tattooers can likely be migrated using hooks/useTattooers.ts.
+Business Hours is blocked because no real table/hook/RLS exists yet.
+```
+
+Business Hours is now Claude-level work. Do not implement it.
 
 ## Read first
 
@@ -32,6 +43,7 @@ agent-room/decisions/2026-07-07-antenor-fast-lane-rule.md
 agent-room/TASK_STATUS_AND_REPORT_BRANCH_RULE.md
 agent-room/decisions/2026-07-07-orchestrator-autonomy-rule.md
 agent-room/reports/2026-07-07-claude-usemockdata-inventory-report.md
+agent-room/reports/2026-07-07-antenor-task5-calendar-settings-tattooers-check-report.md
 ```
 
 ## Product repository
@@ -63,24 +75,25 @@ supabase/
 hooks/useAutomations.ts
 hooks/useMockData.ts
 hooks/useInvitations.ts
-useAppointments/useContacts/useDashboard internals
+hooks/useDashboard.ts
+hooks/useAppointments.ts
+hooks/useContacts.ts
 payments architecture
 team permissions/auth/RLS
 calendar sync engine
 dashboard financial logic
+automation execution logic
 ```
 
 Do not create migrations.
 
 Do not modify remote services.
 
-Do not change automation execution logic.
-
 Do not touch Claude branches.
 
 ---
 
-# Task 1 — Remove orphaned Forms/Workflow UI files
+# Task 6 — CalendarSettings tattooers-only real hook implementation
 
 ## Status
 
@@ -88,312 +101,70 @@ Current authorized task.
 
 ## Objective
 
-Delete orphaned UI files that are no longer imported by active app code and still pull from `useMockData`.
+Replace only the `tattooers` part of `components/calendar/CalendarSettings.tsx` with the existing real hook:
 
-This is pure dead-code deletion.
+```text
+hooks/useTattooers.ts
+```
+
+Do not touch `businessHours` or `updateBusinessHours` yet.
+
+Business Hours remains blocked for Claude/schema decision.
 
 ## Product branch
-
-```text
-antenor/remove-orphaned-mock-ui-files
-```
-
-## Allowed files
-
-Only these files may be deleted:
-
-```text
-components/settings/FormsSettings.tsx
-components/contacts/ContactFormsTab.tsx
-components/automations/WorkflowTabContent.tsx
-components/automations/WorkflowDialog.tsx
-components/automations/WorkflowItemCard.tsx
-```
-
-## Required verification before deletion
-
-Search for active imports/usages of:
-
-```text
-FormsSettings
-ContactFormsTab
-WorkflowTabContent
-WorkflowDialog
-WorkflowItemCard
-```
-
-If any file is still imported by active app code, stop and report `blocked`.
-
-## Verification
-
-Run:
-
-```text
-npm run build
-```
-
-If available and fast enough, also run:
-
-```text
-npx tsc --noEmit
-```
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-antenor-task1-remove-orphaned-mock-ui-files-report.md
-```
-
-## Stop after Task 1
-
-After Task 1, stop and ask authorization for Task 2.
-
----
-
-# Task 2 — Extract Pipeline formatters from useMockData
-
-## Status
-
-Queued, not authorized until Task 1 is reported and approved.
-
-## Objective
-
-Remove `useMockData` dependency from `components/pipeline/PipelineContent.tsx` if it is only used for formatting helpers.
-
-Claude inventory says PipelineContent uses only:
-
-```text
-formatDistanceToNow
-formatCurrency
-```
-
-This should become a tiny utility extraction, not a business-logic change.
-
-## Product branch
-
-```text
-antenor/extract-pipeline-formatters
-```
-
-## Allowed files
-
-Only touch:
-
-```text
-components/pipeline/PipelineContent.tsx
-lib/formatters.ts
-```
-
-If `lib/formatters.ts` does not exist, you may create it.
-
-## Forbidden
-
-Do not change pipeline logic.
-
-Do not modify deals, stages, drag/drop, dashboard, Supabase, hooks, or `useMockData.ts`.
-
-Do not change currency behavior except moving the existing formatter behavior to a utility.
-
-## Verification
-
-Run:
-
-```text
-npm run build
-```
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-antenor-task2-extract-pipeline-formatters-report.md
-```
-
-## Stop after Task 2
-
-After Task 2, stop and ask authorization for Task 3.
-
----
-
-# Task 3 — Replace AI Assistant quickMessages mock usage with static local list
-
-## Status
-
-Queued, not authorized until Task 2 is reported and approved.
-
-## Objective
-
-Remove `useMockData` dependency from `components/messages/AIAssistantDialog.tsx` if it is only used for `quickMessages`.
-
-This should be a UI/static-data cleanup only.
-
-## Product branch
-
-```text
-antenor/ai-assistant-static-quick-messages
-```
-
-## Allowed files
-
-Only touch:
-
-```text
-components/messages/AIAssistantDialog.tsx
-```
-
-Optional only if strictly needed:
-
-```text
-lib/quickMessages.ts
-```
-
-## Forbidden
-
-Do not touch WhatsApp sending.
-
-Do not touch message storage.
-
-Do not touch Supabase.
-
-Do not modify automations.
-
-Do not modify `useMockData.ts`.
-
-Do not change assistant behavior beyond removing the mock-data dependency for quick message suggestions.
-
-## Verification
-
-Run:
-
-```text
-npm run build
-```
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-antenor-task3-ai-assistant-static-quick-messages-report.md
-```
-
-## Stop after Task 3
-
-After Task 3, stop and ask authorization for Task 4.
-
----
-
-# Task 4 — Automations trigger registry plan/check
-
-## Status
-
-Queued, not authorized until Task 3 is reported and approved.
-
-## Objective
-
-Inspect `components/automations/AutomationsContent.tsx` and identify how `automationTriggers` from `useMockData` is used.
-
-This is verification/plan-first.
-
-Do not implement unless the change is only moving a static trigger list into a local code registry with no behavior change.
-
-## Product branch
-
-If code change is needed and safe:
-
-```text
-antenor/automation-trigger-static-registry
-```
-
-If not changing code, no product branch.
-
-## Allowed files if implementation is clearly static-only
-
-```text
-components/automations/AutomationsContent.tsx
-lib/automationTriggers.ts
-```
-
-## Forbidden
-
-Do not modify:
-
-```text
-hooks/useAutomations.ts
-supabase/
-automation execution functions
-trigger execution logic
-automation logs
-RLS/security
-```
-
-If the trigger registry looks like it should be DB-backed or affect execution, stop and report `blocked` for Claude/ChatGPT decision.
-
-## Verification
-
-Run build only if code changes:
-
-```text
-npm run build
-```
-
-## Report path
-
-```text
-agent-room/reports/2026-07-07-antenor-task4-automation-trigger-registry-report.md
-```
-
-## Stop after Task 4
-
-After Task 4, stop and ask authorization for Task 5.
-
----
-
-# Task 5 — CalendarSettings tattooers mock usage plan/check
-
-## Status
-
-Queued, not authorized until Task 4 is reported and approved.
-
-## Objective
-
-Inspect `components/calendar/CalendarSettings.tsx` and classify the remaining `useMockData` usage into:
-
-1. tattooers — possibly replaceable by existing `hooks/useTattooers.ts`;
-2. businessHours — likely requires schema decision and must not be implemented by Antenor.
-
-This is verification/plan-first.
-
-## Product branch
-
-If only a safe tattooers swap is possible and isolated:
 
 ```text
 antenor/calendar-settings-tattooers-real-hook
 ```
 
-If businessHours blocks safe implementation, do not change code.
+## Allowed files
 
-## Allowed files if implementation is clearly tattooers-only
+Only touch:
 
 ```text
 components/calendar/CalendarSettings.tsx
 ```
 
+Do not modify `hooks/useTattooers.ts` unless the task becomes blocked and you request permission first.
+
+## Allowed change
+
+Replace mock-sourced tattooers operations:
+
+```text
+tattooers
+addTattooer
+removeTattooer
+```
+
+with real hook operations from:
+
+```text
+hooks/useTattooers.ts
+```
+
+Adapt names/signatures only inside `CalendarSettings.tsx`.
+
 ## Forbidden
 
-Do not touch businessHours logic if no real table/hook exists.
+Do not touch:
+
+```text
+businessHours
+updateBusinessHours
+supabase/
+hooks/useTattooers.ts
+hooks/useMockData.ts
+appointments/calendar sync
+```
 
 Do not create migrations.
 
-Do not modify Supabase.
-
-Do not touch calendar sync.
-
-Do not modify appointments logic.
-
-Do not change `hooks/useTattooers.ts` unless ChatGPT/Victor explicitly authorizes it later.
+Do not change persisted schema.
 
 ## Verification
 
-Run build only if code changes:
+Run:
 
 ```text
 npm run build
@@ -402,12 +173,210 @@ npm run build
 ## Report path
 
 ```text
-agent-room/reports/2026-07-07-antenor-task5-calendar-settings-tattooers-check-report.md
+agent-room/reports/2026-07-07-antenor-task6-calendar-settings-tattooers-real-hook-report.md
 ```
 
-## Stop after Task 5
+## Stop after Task 6
 
-After Task 5, stop and request the next queue from ChatGPT/Victor.
+After Task 6, stop and ask authorization for Task 7.
+
+---
+
+# Task 7 — Verify product main still contains useMockData imports after Antenor branches
+
+## Status
+
+Queued, not authorized until Task 6 is reported and approved.
+
+## Objective
+
+Produce a fresh, narrow verification of remaining `useMockData` imports on product `main` after Antenor's latest branches/merges.
+
+This is report-only.
+
+## Product branch
+
+None.
+
+## Required check
+
+Search current product `main` for:
+
+```text
+useMockData
+```
+
+List only active files that import it.
+
+Do not include reports, docs or node_modules.
+
+## Forbidden
+
+Do not change product code.
+
+## Report path
+
+```text
+agent-room/reports/2026-07-07-antenor-task7-current-usemockdata-imports-check-report.md
+```
+
+## Stop after Task 7
+
+After Task 7, stop and ask authorization for Task 8.
+
+---
+
+# Task 8 — Check dead form/filler leftovers after Forms removal
+
+## Status
+
+Queued, not authorized until Task 7 is reported and approved.
+
+## Objective
+
+Inspect whether `components/forms/` still contains active code used anywhere after Forms was removed from core.
+
+This is verification-first.
+
+## Product branch
+
+None if report-only.
+
+If deletion is clearly safe and only deletes orphaned Forms UI files, use:
+
+```text
+antenor/remove-dead-form-components
+```
+
+## Files/folders to inspect
+
+```text
+components/forms/
+components/settings/
+components/contacts/
+```
+
+## Forbidden
+
+Do not delete anything that is still imported.
+
+Do not touch form-related types in `types.ts`.
+
+Do not touch Supabase.
+
+Do not touch landing page integrations.
+
+Do not touch `LandingIntegrationsSettings.tsx`.
+
+## Report path
+
+```text
+agent-room/reports/2026-07-07-antenor-task8-dead-form-components-check-report.md
+```
+
+## Stop after Task 8
+
+After Task 8, stop and ask authorization for Task 9.
+
+---
+
+# Task 9 — UI label scan for Forms/Workflows dead navigation
+
+## Status
+
+Queued, not authorized until Task 8 is reported and approved.
+
+## Objective
+
+Search active UI/navigation files for leftover visible labels related to removed core modules:
+
+```text
+Forms
+Workflows
+```
+
+This is verification-first.
+
+## Product branch
+
+None if no code change.
+
+If only dead labels are removed from active navigation, use:
+
+```text
+antenor/remove-dead-forms-workflows-labels
+```
+
+## Allowed areas
+
+Only inspect UI/navigation/config files.
+
+## Forbidden
+
+Do not touch translation files unless a visible active label is proven dead and removal is explicitly safe.
+
+Do not touch automation execution logic.
+
+Do not touch Supabase.
+
+## Report path
+
+```text
+agent-room/reports/2026-07-07-antenor-task9-forms-workflows-label-scan-report.md
+```
+
+## Stop after Task 9
+
+After Task 9, stop and ask authorization for Task 10.
+
+---
+
+# Task 10 — Small build health report for active fast-lane branches
+
+## Status
+
+Queued, not authorized until Task 9 is reported and approved.
+
+## Objective
+
+Produce a build health summary for Antenor fast-lane branches that are not yet merged.
+
+This is report-only.
+
+## Product branch
+
+None.
+
+## Required output
+
+List:
+
+```text
+branch
+commit SHA
+purpose
+build status
+merge readiness
+risks
+```
+
+## Forbidden
+
+Do not change product code.
+
+Do not merge.
+
+Do not open PR unless ChatGPT/Victor explicitly asks.
+
+## Report path
+
+```text
+agent-room/reports/2026-07-07-antenor-task10-fast-lane-build-health-report.md
+```
+
+## Stop after Task 10
+
+After Task 10, stop and request the next queue from ChatGPT/Victor.
 
 ---
 
