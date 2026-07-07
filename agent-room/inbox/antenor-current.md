@@ -3,8 +3,16 @@
 To: Antenor
 Copy/notification: rtzlatattoo@gmail.com
 From: ChatGPT — Orchestrator / Critical Planner
-Subject: Remove Forms from core Settings UI — isolated small task
+Subject: Step 3 — Verify Workflows are fully hidden from base Automations UI
 Date: 2026-07-07
+
+## Context
+
+Your previous task, `Remove Forms from core Settings UI`, was completed and merged into product `main` through PR #1.
+
+Do not repeat that task.
+
+Claude is back online and has been assigned the full `useMockData` inventory. Do not touch Claude's task.
 
 ## Repository to read first
 
@@ -23,12 +31,11 @@ REPORTING_STANDARD.md
 TEAM_OPERATING_MODEL.md
 PARALLEL_AGENT_WORKFLOW.md
 agent-room/decisions/2026-07-07-mockdata-removal-plan.md
-agent-room/decisions/2026-07-07-fixed-email-recipient.md
+agent-room/TASK_STATUS_AND_REPORT_BRANCH_RULE.md
+agent-room/decisions/2026-07-07-orchestrator-autonomy-rule.md
 ```
 
-## Repository to work on
-
-After Victor approves this task, work on:
+## Product repository to inspect
 
 ```text
 rtzforyou/easytattoo-crm
@@ -36,113 +43,109 @@ rtzforyou/easytattoo-crm
 
 ## Objective
 
-Remove Forms from the core app UI, because Forms is not part of the current Keyros core scope and can be replaced by Google Forms or external tools.
+Step 3 of the MockData Removal Plan:
 
-## Owner
+Confirm that the Workflows tab is fully hidden/removed from the base Automations UI after the previous merge.
 
-Antenor.
+This is a verification-first task.
 
-This is a small, isolated UI cleanup task.
+## Branch rule
 
-## Branch
-
-Use a separate branch:
+Use a separate branch only if a code change is necessary:
 
 ```text
-antenor/remove-forms-ui
+antenor/verify-workflows-hidden
 ```
 
-## Allowed files
+If no code change is needed, do not create a product commit. Create only the report in `keyros-engine` on your own report branch.
 
-Only files directly responsible for showing Forms in Settings/navigation may be touched.
+## Scope
 
-Likely allowed area:
+You may inspect only the Automations UI area and direct imports related to Workflows visibility.
+
+Likely files to inspect:
 
 ```text
-components/settings/
+components/automations/AutomationsContent.tsx
+components/automations/WorkflowTabContent.tsx
 ```
 
-If another file is required, stop and ask Victor before editing it.
+## Allowed action
 
-## Forbidden files / domains
+Preferred outcome:
 
-Do not touch:
+- verification report only, if Workflows is already hidden.
 
-```text
-components/automations/
-hooks/useAutomations.ts
-hooks/useAppointments.ts
-hooks/useContacts.ts
-hooks/useTattooers.ts
-hooks/useDashboard.ts
-supabase/migrations/
-supabase/functions/
-payments
-team members
-calendar sync
-RLS/security files
-```
+Small code cleanup allowed only if you find a visible Workflows tab still active in the base UI.
 
-## Forbidden actions
+## Forbidden
 
-Do not implement forms.
+Do not modify automation execution logic.
 
-Do not create form tables.
+Do not modify `hooks/useAutomations.ts`.
+
+Do not modify Supabase.
 
 Do not create migrations.
 
-Do not edit Supabase.
+Do not touch payments, team, calendar, dashboard, contacts or pipeline.
 
-Do not touch Workflows.
+Do not remove `WorkflowTabContent.tsx` unless ChatGPT/Victor explicitly approves deletion after your report.
 
-Do not modify payments, team, calendar, dashboard or automations.
+Do not touch `useMockData` broadly; Claude is inventorying it.
 
-Do not clean unrelated `useMockData` areas.
+## Verification checklist
 
-## Expected change
-
-Remove Forms from visible base Settings UI.
-
-Remove imports that become unused only if they are directly related to Forms removal.
-
-Keep the change small.
-
-## Verification required
-
-Run the available build/typecheck/lint command if available.
-
-At minimum, verify:
+Confirm:
 
 ```text
-Settings page no longer shows Forms tab/entry.
-No broken imports from the removal.
-No unrelated files were changed.
+AutomationsContent.tsx does not render a Workflows tab.
+AutomationsContent.tsx does not import WorkflowTabContent.
+Base user cannot access Workflows from Automations UI.
+No unrelated files changed.
+```
+
+## Required report path
+
+Create report in `keyros-engine`:
+
+```text
+agent-room/reports/2026-07-07-antenor-workflows-hidden-verification-report.md
+```
+
+Use your own branch in `keyros-engine` for the report:
+
+```text
+antenor/workflows-hidden-verification-report
 ```
 
 ## Required final report
 
 ```text
-Task:
+Task: Verify Workflows hidden from base Automations UI
 Agent: Antenor
-Repo:
-Branch:
-Commit SHA:
-PR:
+Status: completed / needs_review / blocked
+Repo inspected: rtzforyou/easytattoo-crm
+Product branch: none, if no code change / antenor/verify-workflows-hidden, if code change
+Product commit SHA: none, if no code change
+Engine branch:
+Report path:
+Engine commit SHA:
+Files inspected:
 Files changed:
 What changed:
-Why changed:
 Verification performed:
-Remote changes: none expected
-Keyros Engine updated: no, unless unexpected scope change
+Remote changes:
 Risks / not verified:
 Next isolated task recommended:
+Permission requested from Victor: yes
 ```
 
 ## Stop rule
 
-Do not start this task until Victor explicitly authorizes it.
+After the verification/report, stop.
 
-After finishing, stop and ask Victor before any next task.
+Do not start any implementation beyond the narrow Workflows visibility check.
 
 Signed,
 ChatGPT — Orchestrator / Critical Planner for Keyros
