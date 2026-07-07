@@ -3,161 +3,421 @@
 To: Claude
 Copy/notification: rtzlatattoo@gmail.com
 From: ChatGPT — Orchestrator / Critical Planner
-Subject: Revision required — Team migration must protect sensitive user columns before approval
+Subject: Claude Ultra Queue — sequential heavy tasks with approval gates
 Date: 2026-07-07
+
+## Context
+
+Victor is activating you for a heavier execution run.
+
+You may see a long queue, but you must execute only the currently authorized task.
+
+After each task:
+
+1. commit/report;
+2. return only summary metadata to Victor/ChatGPT;
+3. request authorization;
+4. stop.
+
+Do not silently continue to the next task.
+
+## Product repository
+
+```text
+rtzforyou/easytattoo-crm
+```
+
+## Engine repository
+
+```text
+rtzforyou/keyros-engine
+```
+
+## Mandatory reading
+
+Read before acting:
+
+```text
+GRAPH.md
+AGENT_EXECUTION_PROTOCOL.md
+REPORTING_STANDARD.md
+TEAM_OPERATING_MODEL.md
+PARALLEL_AGENT_WORKFLOW.md
+agent-room/TASK_STATUS_AND_REPORT_BRANCH_RULE.md
+agent-room/decisions/2026-07-07-orchestrator-autonomy-rule.md
+agent-room/reports/2026-07-07-claude-team-real-model-plan.md
+agent-room/reports/2026-07-07-claude-team-migration-slice-report.md
+```
+
+## Current PR status
+
+Team migration PR is open:
+
+```text
+PR #9 — feat(team): prepare real users permissions model migration
+Branch: claude/team-real-model-migration-slice
+Head: 9a2859f4bb6291664a74ad9810b969537f85271a
+```
+
+ChatGPT opened the PR after Victor approval.
+
+Important:
+
+```text
+PR opened/approved for review readiness only.
+Supabase production migration is NOT approved yet.
+Do not apply migration until a later explicit task says so.
+```
+
+---
+
+# Global rules for this ultra queue
+
+Execute only one task at a time.
+
+Do not apply Supabase migrations unless the current task explicitly authorizes it.
+
+Do not merge PRs unless the current task explicitly authorizes it.
+
+Do not touch Antenor branches.
+
+Do not touch unrelated product areas.
+
+For every task, create/update a report in:
+
+```text
+keyros-engine/agent-room/reports/
+```
+
+Final response to Victor/ChatGPT must be short:
+
+```text
+Task:
+Status:
+Product branch:
+Product commit:
+PR:
+Report path:
+Engine commit:
+Permission requested:
+```
+
+Do not paste long reports into chat.
+
+---
+
+# Task 0 — PR #9 merge-readiness check
 
 ## Status
 
-Your migration-only slice was received and reviewed.
+Current authorized task.
 
-Product branch:
+## Objective
+
+Check PR #9 for merge readiness after the latest main updates.
+
+This is review/check only.
+
+## Required checks
+
+Verify:
 
 ```text
-claude/team-real-model-migration-slice
+PR #9 still has exactly one migration file
+no frontend/hooks/components changed
+no Supabase production apply happened
+migration includes guard against non-admin self-escalation
+migration includes rollback notes in report
 ```
 
-Product commit reviewed:
+## Forbidden
+
+Do not merge PR #9.
+
+Do not apply migration.
+
+Do not modify product code unless PR #9 is stale/broken and requires a small rebase/revision.
+
+If a revision is needed, stop and report `needs_revision`.
+
+## Report path
 
 ```text
-1ebb752ef156cb393a60f23b0239f438f8deb917
+agent-room/reports/2026-07-07-claude-task0-pr9-merge-readiness-report.md
 ```
 
-Migration file:
+## Stop after Task 0
+
+Stop and request authorization for Task 1.
+
+---
+
+# Task 1 — Apply/test plan for Team migration
+
+## Status
+
+Queued. Not authorized until Task 0 is reviewed.
+
+## Objective
+
+Create an exact apply/test/rollback runbook for PR #9 migration.
+
+No production apply yet unless explicitly authorized later.
+
+## Required output
+
+Include SQL/test plan for:
 
 ```text
-supabase/migrations/20260711000000_team_users_columns_and_signup.sql
-```
-
-ChatGPT confirmed the branch contains exactly one new migration file.
-
-## Review result
-
-Status: needs_revision before PR/merge/apply.
-
-The migration is mostly correct and non-destructive:
-
-- adds `permissions`, `email`, `avatar_url` with `ADD COLUMN IF NOT EXISTS`;
-- updates `handle_new_user()` to populate `email` and invited-user `permissions`;
-- backfills missing email only;
-- does not apply production SQL.
-
-However, the migration introduces a sensitive `permissions` column without protecting it from the existing self-update profile policy.
-
-## Blocking issue
-
-Existing RLS has an own-profile update path.
-
-After this migration, if `permissions` exists and no column-level guard exists, a non-admin user may be able to update their own `permissions` row and self-grant modules once the app starts enforcing permissions.
-
-This is not acceptable to merge/apply as-is.
-
-## Current authorized task
-
-Revise the same migration-only branch to add a database-side guard that prevents non-admin/self-profile updates from changing sensitive columns.
-
-## Product branch
-
-Continue on the same branch:
-
-```text
-claude/team-real-model-migration-slice
-```
-
-## Allowed files
-
-Only modify the existing migration file:
-
-```text
-supabase/migrations/20260711000000_team_users_columns_and_signup.sql
-```
-
-Do not add a second migration file for this revision.
-
-Do not modify frontend.
-
-Do not modify hooks/components.
-
-Do not apply the migration to Supabase production.
-
-## Required guard
-
-Add a trigger/function or equivalent database-side protection so that:
-
-1. non-admin users cannot update their own `permissions`;
-2. non-admin users cannot update their own `role`;
-3. non-admin users cannot update their own `organization_id`;
-4. normal profile edits such as `full_name` and `avatar_url` remain possible for the row owner;
-5. admin updates to other users in the same organization remain possible under existing RLS policy.
-
-Prefer a clear `BEFORE UPDATE ON public.users` trigger that compares `OLD` and `NEW` values and checks the acting `auth.uid()` user's role/org.
-
-If a trigger is not the correct approach, explain why and implement the safer alternative in SQL.
-
-## Required verification
-
-Do not apply to production.
-
-Verify by inspection and document expected outcomes for:
-
-```text
+normal signup without invite
+signup with pending invite
 member updates own full_name/avatar_url -> allowed
 member updates own permissions -> blocked
 member updates own role -> blocked
 member updates own organization_id -> blocked
 admin updates member permissions -> allowed
 admin updates member role -> allowed
-admin updates member full_name/avatar_url -> allowed if existing admin policy permits
-signup without invite -> still creates organization/admin
-signup with invite -> still joins invited organization and copies invite permissions
+rollback plan
 ```
 
-## Required report update
-
-Create or update the report in `keyros-engine`:
+## Report path
 
 ```text
-agent-room/reports/2026-07-07-claude-team-migration-slice-report.md
+agent-room/reports/2026-07-07-claude-task1-team-migration-apply-test-runbook.md
 ```
 
-Use engine branch:
+## Stop after Task 1
+
+Stop and request authorization for Task 2.
+
+---
+
+# Task 2 — Apply Team migration and verify in Supabase
+
+## Status
+
+Queued. Not authorized until Victor explicitly approves production apply.
+
+## Objective
+
+Apply PR #9 migration to Supabase and run the approved verification plan.
+
+## Forbidden until explicit approval
+
+Do not run this task just because it is listed here.
+
+Only execute if Victor/ChatGPT explicitly says:
 
 ```text
-claude/team-migration-slice-report
+Approve Task 2 — apply Team migration to Supabase
 ```
 
-Report must include:
+## Report path
 
 ```text
-Task: Team real model migration-only slice — revision
-Agent: Claude
-Status: needs_review / completed / blocked
-Product branch:
-Product commit SHA before revision:
-Product commit SHA after revision:
-Migration file:
-Engine branch:
-Engine commit SHA:
-Files changed:
-What changed:
-Security guard added:
-Verification performed:
-Supabase applied: no
-Risks / not verified:
-Rollback plan:
-Permission requested from Victor: yes
+agent-room/reports/2026-07-07-claude-task2-team-migration-apply-verification-report.md
 ```
 
-## Stop rule
+## Stop after Task 2
 
-After revising the migration and report, stop.
+Stop and request authorization for Task 3.
 
-Do not open PR.
+---
 
-Do not merge.
+# Task 3 — Team members hook plan/read-only implementation
 
-Do not apply to Supabase production.
+## Status
 
-Do not start frontend/hook work.
+Queued. Not authorized until migration is applied and verified.
+
+## Objective
+
+Create `hooks/useTeamMembers.ts` and, if authorized in that task, wire read-only Team members listing.
+
+Prefer split if risk is high:
+
+```text
+Task 3A: hook only
+Task 3B: TeamContent read-only wiring
+```
+
+## Forbidden
+
+Do not change Login permission enforcement yet.
+
+Do not implement removeMember yet.
+
+Do not modify RLS unless explicitly scoped.
+
+## Report path
+
+```text
+agent-room/reports/2026-07-07-claude-task3-use-team-members-report.md
+```
+
+## Stop after Task 3
+
+Stop and request authorization for Task 4.
+
+---
+
+# Task 4 — Team role/permissions editing
+
+## Status
+
+Queued. Not authorized until Team read-only listing works.
+
+## Objective
+
+Allow admin to update team member role and permissions using the real `public.users` model.
+
+## Forbidden
+
+Do not change Login enforcement yet unless explicitly included.
+
+Do not implement remove member yet.
+
+## Report path
+
+```text
+agent-room/reports/2026-07-07-claude-task4-team-edit-role-permissions-report.md
+```
+
+## Stop after Task 4
+
+Stop and request authorization for Task 5.
+
+---
+
+# Task 5 — Login permission enforcement plan and implementation
+
+## Status
+
+Queued. Not authorized until Team editing works.
+
+## Objective
+
+Stop granting all modules blindly in Login.
+
+Implement real permission resolution:
+
+```text
+admin -> all active modules
+non-admin -> permissions from public.users.permissions
+```
+
+## Required caution
+
+Avoid locking users out.
+
+Keep an emergency fallback plan.
+
+## Report path
+
+```text
+agent-room/reports/2026-07-07-claude-task5-login-permission-enforcement-report.md
+```
+
+## Stop after Task 5
+
+Stop and request authorization for Task 6.
+
+---
+
+# Task 6 — removeMember decision and soft-remove design
+
+## Status
+
+Queued. Not authorized until permission enforcement is stable.
+
+## Objective
+
+Design and implement the first safe remove member path.
+
+Default recommendation:
+
+```text
+soft remove / disabled / revoked access
+```
+
+Hard delete via service_role Edge Function is not authorized unless Victor explicitly chooses it.
+
+## Report path
+
+```text
+agent-room/reports/2026-07-07-claude-task6-team-remove-member-report.md
+```
+
+## Stop after Task 6
+
+Stop and request authorization for Task 7.
+
+---
+
+# Task 7 — Client payments real model plan
+
+## Status
+
+Queued. Not authorized until Team critical path is stable or Victor reprioritizes.
+
+## Objective
+
+Plan replacement of `components/payments/PaymentsContent.tsx` mock dependency with real client payments model.
+
+Separate clearly:
+
+```text
+client payments
+app billing/subscription
+expenses
+financial dashboard
+```
+
+## Report path
+
+```text
+agent-room/reports/2026-07-07-claude-task7-client-payments-real-model-plan.md
+```
+
+## Stop after Task 7
+
+Stop and request authorization for Task 8.
+
+---
+
+# Task 8 — Business Hours schema plan
+
+## Status
+
+Queued. Not authorized until Team/Payments priority is decided.
+
+## Objective
+
+Plan persisted business hours for `CalendarSettings.tsx`.
+
+Compare:
+
+```text
+organization_business_hours table
+organization_settings JSONB
+hybrid
+```
+
+## Report path
+
+```text
+agent-room/reports/2026-07-07-claude-task8-business-hours-schema-plan.md
+```
+
+## Stop after Task 8
+
+Stop and request next queue.
+
+---
+
+## Final instruction
+
+Current authorized task is Task 0 only.
 
 Signed,
 ChatGPT — Orchestrator / Critical Planner for Keyros
