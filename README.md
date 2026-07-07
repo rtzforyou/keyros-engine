@@ -1,30 +1,34 @@
 # Keyros Engine
 
-Motor de conhecimento do ecossistema Keyros.
+Graph-first knowledge engine for the Keyros ecosystem.
 
-Este repositório existe para organizar contexto técnico, decisões arquiteturais, regras de negócio e mapas de conhecimento usados por agentes como Claude, ChatGPT, Codex, Gemini e ferramentas futuras.
+This repository is not the product app. It is the fast-reading structural brain used by agents and humans to understand the product without scanning every file first.
 
-## Objetivo
+## Reading order
 
-Reduzir perda de contexto, retrabalho e decisões contraditórias entre agentes.
+Agents must not read the whole repository by default.
 
-## O que entra aqui
+Start here:
 
-- Arquitetura confirmada do Keyros.
-- Regras de negócio documentadas.
-- ADRs: Architecture Decision Records.
-- Relatórios e snapshots gerados pelo Graphify.
-- Padrões de segurança, teste e desenvolvimento.
-- Glossário e decisões importantes.
+1. `GRAPH.md`
+2. `graph/GRAPH_REPORT.md`
+3. `CONTEXT_INDEX.md`
+4. Relevant domain files
+5. Relevant ADRs
 
-## O que não entra aqui
+## Source product repository
 
-- Tokens, chaves, senhas ou credenciais.
-- Dados reais de clientes.
-- Código fonte principal do produto.
-- Informações inventadas ou genéricas.
-- Estratégias não aprovadas.
+- Product repo: `rtzforyou/easytattoo-crm`
+- Working product name: Keyros
+- Legacy/current repo name: EasyTattoo CRM
 
-## Regra principal
+## Purpose
 
-Tudo neste repositório deve ser útil, verificável e direto. Sem encher linguiça.
+- Reduce repeated context discovery.
+- Prevent contradictory decisions between agents.
+- Give Claude, ChatGPT, Codex, Gemini and future tools the same source of truth.
+- Keep the project readable as a business system, not only as code.
+
+## Rule
+
+Graph first. Index second. Details only when needed.
