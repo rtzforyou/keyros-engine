@@ -32,6 +32,8 @@ The following components and configs under `components/messages/` and routing la
    - Separated groups and direct contacts cleanly by using the `isChatGroup` validation helper (matching `@g.us` suffix).
    - Solved contact/group name and avatar mixups by isolating mapping resolutions inside `useRealMessages.ts` based on chat type.
    - Forced group chats to always use the group subject and direct chats to use the contact name, eliminating display swaps.
+   - Normalized conversation type mapping to uppercase enum values: `DIRECT`, `GROUP`, `CHANNEL`, `UNKNOWN`.
+   - Implemented deduplication by `remote_jid` to prevent duplicated private conversations in the unified inbox.
 
 ---
 
