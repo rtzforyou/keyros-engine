@@ -14,6 +14,7 @@ The following components and configs under `components/messages/` and routing la
 - `ChatHeader.tsx` (Safe profile fallbacks)
 - `Login.tsx` (Grant database permissions dynamically to non-admins)
 - `App.tsx` (Access authorization normalization)
+- `useRealMessages.ts` (Dynamic display name and avatar resolvers)
 
 ---
 
@@ -26,6 +27,10 @@ The following components and configs under `components/messages/` and routing la
    - Filter bar supports WhatsApp, Instagram, Email, and Unknown channels dynamically.
 4. **Composer Protection (Task 6):** Added `isSending` check states to the message input field to eliminate empty submissions or duplicate triggers from quick double-clicks.
 5. **Permissions Normalization (Task 7):** Integrates the session profile initialization and routing access tests to normalize permissions dynamically according to the Module Registry v2 canon.
+6. **Issue #14 Implementation (WhatsApp Structure):**
+   - Unified conversations into a single inbox without duplicated tabs.
+   - Separated groups and direct contacts cleanly by using the `isChatGroup` validation helper (matching `@g.us` suffix).
+   - Solved contact/group name and avatar mixups by isolating mapping resolutions inside `useRealMessages.ts` based on chat type.
 
 ---
 
