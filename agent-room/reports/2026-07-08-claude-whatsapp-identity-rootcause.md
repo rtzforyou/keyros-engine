@@ -154,3 +154,30 @@ futuro do webhook: committar o rate-limiter (`supabase/functions/_shared/
 rateLimiter.ts` + o bloco no webhook) a main. É trabalho do Antenor — flag para
 ChatGPT coordenar. O deploy que fiz agora está correto (prod tem tudo); o risco
 é só em deploys futuros a partir de um main incompleto.
+
+## SEGUIMENTO — Consistência de identidade de GRUPO (2026-07-08)
+
+Causa raiz (grupos): dado legado — versões antigas do webhook (antes do guard
+`!isGroup`) escreveram sender_name/pushName de mensagens de grupo em
+whatsapp_chats.display_name. A maioria dos grupos não tem
+whatsapp_groups.subject, e o enrich do frontend só troca por subject ou fallback
+numérico, por isso o nome de participante ("Lisete", "Rose", "Kim Pimentel")
+sobrevivia como identidade. O webhook actual (v43/main) já guarda `!isGroup` no
+caminho de mensagens — nenhum grupo novo é poluído (item 6 já satisfeito).
+
+Correção: migração `20260712000004` (PR #17) — para grupos, display_name =
+subject quando existe; senão, se for participante → NULL (fallback neutro no
+frontend). Nomes de grupo legítimos ("Nome do Grupo 2") mantidos.
+`conversationIdentity.ts` GROUP documentado como estrito (subject → nome de
+grupo → neutro, nunca participante).
+
+APLICADO 2026-07-08 (autorização explícita de Victor). Verificação pós-apply:
+grupos com nome de participante = 0; 10 grupos → fallback neutro; 4 com nome
+legítimo. Sem redeploy de webhook (item 6 já live). Componentes (ChatHeader/
+ConversationList/ChatArea) não editados — já usam um único display_name
+enriquecido; após a reparação nunca é um participante.
+
+Estado dos merges: PR #16 (identidade privada) e PR #15 (Antenor billing/messages
++ rate-limiter) ambos merged em main — a divergência repo↔prod do rate-limiter
+resolveu-se. Os guards !fromMe sobreviveram ao merge (verificado em main).
+PR #17 (grupos) aberto, CLEAN, aguarda merge.
