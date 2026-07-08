@@ -129,3 +129,28 @@ Remote-only change: no (ainda). Migração committed no PR; apply pendente de ga
   há "estado bom" anterior para restaurar; se preciso, recomputar de novo do
   último inbound (a migração é idempotente). Nenhuma perda de dados reais
   (mensagens intactas; só o campo de nome muda).
+
+## APLICADO 2026-07-08 (autorização explícita de Victor)
+
+- **Deploy:** whatsapp-webhook v43 ACTIVE (verify_jwt=false preservado). O fix
+  foi deployed sobre a versão de PRODUÇÃO (v42), que já continha o rate-limiter
+  do Antenor — preservado. Bundle usou `./rateLimiter.ts` (sibling) por
+  limitação do bundler com `../_shared/`.
+- **Reparação:** migração 20260712000003 aplicada. Verificação pós-apply:
+  chat 41799020196 → display_name e push_name = "Felipe - FLIP INK";
+  chats_still_poisoned = 0; wacontacts_still_poisoned = 0; 6 chats privados sem
+  nome (fallback telefone/contacto no read layer).
+
+## RISCO / DIVERGÊNCIA repo↔prod (ACÇÃO NECESSÁRIA)
+
+O webhook em PRODUÇÃO tem o rate-limiter (`_shared/rateLimiter.ts` + bloco),
+mas isso é trabalho NÃO COMMITADO do Antenor (working tree de
+antenor/billing-ux-draft; ausente de origin/main). O meu PR #16 (baseado em
+origin/main) NÃO contém o rate-limiter — só o fix de identidade de 2 linhas.
+
+Consequência: se alguém fizer deploy do webhook a partir de main após o merge
+do #16, PERDE o rate-limiter. Reconciliação necessária antes de qualquer deploy
+futuro do webhook: committar o rate-limiter (`supabase/functions/_shared/
+rateLimiter.ts` + o bloco no webhook) a main. É trabalho do Antenor — flag para
+ChatGPT coordenar. O deploy que fiz agora está correto (prod tem tudo); o risco
+é só em deploys futuros a partir de um main incompleto.
