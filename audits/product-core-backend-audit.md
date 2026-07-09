@@ -13,7 +13,8 @@ Base: 14 edge functions no repo + `_shared/` (circuitBreaker, rateLimiter), 9 se
 
 | # | Achado | Sev. | Estado |
 |---|--------|------|--------|
-| 1 | Drift repo↔prod: `automation-scheduler`/`automation-retry` sem circuit breaker no repo (prod tem v23/v7) | ALTO | **CORRIGIDO** — PR #36 (repo←prod) |
+| 1 | Drift repo↔prod: `automation-execute`+`scheduler`+`retry` sem circuit breaker no repo + `landing-lead` (público) com rate limiter em memória vs DB-backed em prod | ALTO | **CORRIGIDO** — PR #36 (repo←prod, 4 funções) |
+| 1b | `send-whatsapp` = função legada do provider antigo **Green API** (`GREENAPI_*`, formato `@c.us`), substituída por `whatsapp-send` (Evolution) — dead code | BAIXO | ADR-0002 cleanup |
 | 2 | Defesa-em-profundidade: hooks fazem read/mutação sem `.eq('organization_id')` explícito | MÉDIO | documentado; fix precisa coordenação (Antenor) |
 | 3 | Duplicação: template engine inline em scheduler+retry(+execute); `interpolate` próprio no engine | MÉDIO | ADR proposto (deploy-coupled) |
 | 4 | Duplicação: helpers de identidade WhatsApp (normalizeJid/getPhone/normalizePhone) em ≥4 funções | MÉDIO | ADR proposto (deploy-coupled) |
@@ -31,9 +32,14 @@ Base: 14 edge functions no repo + `_shared/` (circuitBreaker, rateLimiter), 9 se
 - **Executores múltiplos e sobrepostos:** `automation-execute` (729 linhas, verify_jwt=true,
   executor principal chamado pelo webhook/send/landing), `automation-scheduler` (cron/minuto),
   `automation-retry` (retry manual autenticado), `automation-engine` (fila pública — legado/
-  duplicado, ver ADR-0002). Três sistemas de template quase iguais + um `interpolate` próprio.
-- **Resiliência:** scheduler/retry/send usam `safeApiCall` (circuit breaker por-org, timeout via
-  AbortController) — bom. `automation-engine` **não** tem resiliência (mais um motivo para o stub).
+  duplicado, ver ADR-0002). **Template triplicado**: `renderTemplate` (scheduler/retry, idênticos) +
+  `renderAutomationTemplate`→`RenderResult` (execute, variante **mais rica**: detected/resolved/
+  missing/warnings) + `interpolate` (engine). **Alvo canónico da consolidação = a versão rica
+  `RenderResult`.** `processAutomationTrigger` (em execute) é a função central madura (alias canónico,
+  anti-loop, idempotência via unique 23505, debug logs padronizados) — boa.
+- **Resiliência:** execute/scheduler/retry/send usam `safeApiCall` **em prod** (circuit breaker por-org,
+  timeout via AbortController); o repo estava atrás nos 3 executores (ver #1, corrigido no PR #36).
+  `automation-engine` **não** tem resiliência (mais um motivo para o stub).
 - **Ação:** (a) consolidar template engine em `_shared/templateEngine.ts` (ADR + deploy-coupled);
   (b) decidir o destino do `automation-engine` (stub vs manter) — decisão de arquitetura.
 
