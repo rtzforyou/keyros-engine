@@ -57,3 +57,61 @@ Edge functions são Deno (fora do vite). Frontend tsc limpo + build ✓.
 ## Próximo passo
 Merge do #29 (gate). Depois: main==prod backend → arrancar Fase 3 com segurança.
 Frontend system-health: Antenor commita quando quiser deployá-lo.
+
+---
+
+## Apêndice — MAPA DE DRIFT EXATO (autonomous queue, item 6, 2026-07-09)
+
+Verificação completa repo(main)↔produção após #29.
+
+### Edge functions (20 deployed ACTIVE)
+**Objetivo (webhook/send/resiliência) — RECONCILIADO:**
+| Função | Deployed | Repo | Estado |
+|---|---|---|---|
+| whatsapp-webhook | v43 | main | ✅ alinhado (guards !fromMe + rate limiter) |
+| whatsapp-send | v18 | #29 | ✅ corrigido (main estava stale) |
+| automation-bulk-send | v3 | #29 | ✅ adicionado |
+| automation-campaign-control | v3 | #29 | ✅ adicionado |
+| landing-lead | v19 | main | ✅ tem rate limit |
+| _shared/rateLimiter | — | main | ✅ |
+| _shared/circuitBreaker | — | #29 | ✅ adicionado |
+| automation-execute/retry/scheduler | live | main | ✅ presente (não usa circuit/rate) |
+
+**Drift adicional (FORA do objetivo — decisão futura, não commitado):**
+- Deployed-only (sem fonte em main): `setup-org-storage`, `debug-whatsapp`,
+  `sync-whatsapp-history`, `whatsapp-sync`, `automation-engine`, `lead-intake`,
+  `appointment-api`. Aparentam legado/utilitário; alguns duplicam funcionalidade
+  (send-whatsapp vs whatsapp-send). Decisão: commitar fonte OU deprecar/remover
+  da produção — requer avaliação (não é o path de resiliência).
+- Repo-only (em main, não deployed): `evolution-webhook` — provável legado
+  (substituído por whatsapp-webhook).
+
+### Migrações (54 aplicadas vs 34 ficheiros em main)
+- **Resiliência: alinhado** — `circuit_breaker_resilience`, `automation_bulk_campaigns`
+  (#29); `rate_limiting`, `rate_limit_review_fixes` (main).
+- **Ledger histórico desalinhado (fora do objetivo):** 34 migrações aplicadas
+  não têm ficheiro com o mesmo nome em main (early migrations aplicadas via MCP:
+  core_saas_schema/whatsapp_saas_v2/payments_rebuild/automation_schema_v2/etc.),
+  e ~10 ficheiros em main têm nomes que não batem com nomes aplicados. **O SCHEMA
+  está consistente** (tudo aplicado); o desalinhamento é no LEDGER de nomes, não
+  no schema. Risco: recriar um ambiente novo a partir de main teria o ledger
+  incompleto. Não-urgente (nenhum ambiente novo em vista). Reconciliar o ledger
+  1:1 é um EPIC próprio (histórico, judgment-heavy) — NÃO feito aqui.
+
+### Verificação de âmbito do #29
+- Só backend + docs/knowledge/26. **Nenhum WIP frontend** incluído (confirmado).
+- Frontend system-health (lib/resilience, useSystemHealth, SystemHealthSettings,
+  useCampaigns, CampaignProgressPanel) NÃO está em #29 nem deployed ao frontend
+  de prod → Antenor.
+
+### Conclusão
+O objetivo da reconciliação (webhook/send/resiliência antes de deploy futuro)
+está **100% coberto pelo #29**. O drift restante (7 funções legadas + ledger de
+migrações) é histórico, fora do objetivo, e requer decisão de arquitetura →
+recomendado como EPIC separado "Legacy Edge/Migration Cleanup".
+
+### Estado da queue (autonomous)
+Itens 1–6 concluídos. **Item 7 (próximo trabalho de roadmap) está BLOQUEADO** até
+o #29 ser merged (não posso mergear — Hard Gate). Fase 3 proibida até drift
+reconciliado + dívida frontend reduzida. Sem trabalho backend elegível não-gated
+restante → STOP.
