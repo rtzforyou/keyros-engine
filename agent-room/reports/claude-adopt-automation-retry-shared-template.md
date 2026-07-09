@@ -44,13 +44,28 @@ Deployed `automation-retry` v7 tem o template **inline**; esta versão importa-o
 deployed — a única diferença é a origem do código (inline → módulo partilhado),
 que o bundler resolve ao empacotar `../_shared/templateEngine.ts`.
 
-## ⚠️ GATE — deploy-coupled
-Ao mergear, `automation-retry` **tem de ser deployed no mesmo passo** (o
-`_shared/templateEngine.ts` é bundlado com a função). Se mergear sem deploy, o
-repo fica à frente do prod (drift). **NÃO deployar sem aprovação explícita do
-Victor.** Parado aqui.
+## ✅ DEPLOY EXECUTADO (Victor autorizou "aprovado deploy #42")
+Fluxo deploy-coupled concluído em 2026-07-09:
+1. **Merge** do PR #42 → `main` @ `277360e`.
+2. **Deploy** via MCP `deploy_edge_function` (layout repo-path: `index.ts` +
+   `_shared/circuitBreaker.ts` + `_shared/templateEngine.ts`, conteúdo exato de
+   `main`). Resultado: **automation-retry v8**, ACTIVE, verify_jwt=false.
+3. **Validação do deployed** (`get_edge_function` v8):
+   - `index.ts` importa `renderTemplate`/`TemplateContext` de
+     `../_shared/templateEngine.ts`; **sem allowlist inline**.
+   - `_shared/templateEngine.ts` + `_shared/circuitBreaker.ts` **bundlados** e
+     resolvidos (o deploy não falharia se os imports não resolvessem).
+   - **Smoke test runtime:** `POST` sem auth → **HTTP 401 `{"error":"Não
+     autenticado"}`** → a função **arranca e corre** (imports resolvem em
+     runtime), auth-guard ativo, **sem efeitos colaterais**.
+4. **Sem drift:** `main` (com a adoção) == prod (v8 deployed).
 
-## Próximo (após este ser aprovado+deployed)
-Adoção #2: `automation-scheduler` (mesmo template inline idêntico), mesmo padrão.
-Depois `automation-execute` (usa a variante rica `renderAutomationTemplate` —
-requer alinhar o alvo canónico primeiro) e os helpers `whatsappIdentity`.
+## Estado
+**PARADO antes da adoção #2**, conforme instruído. Não avanço para
+`automation-scheduler` até nova autorização.
+
+## Próximo (aguarda gate)
+Adoção #2: `automation-scheduler` (mesmo template inline idêntico), mesmo padrão
+pequeno + deploy-coupled. Depois `automation-execute` (usa a variante rica
+`renderAutomationTemplate` — requer decidir o alvo canónico primeiro) e os
+helpers `whatsappIdentity`.
