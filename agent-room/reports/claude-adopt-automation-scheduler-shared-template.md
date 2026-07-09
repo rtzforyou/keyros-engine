@@ -45,12 +45,29 @@ importa-o de `_shared`. Conteúdo token-idêntico → **funcionalmente equivalen
 deployed; única diferença = origem do código (inline → módulo partilhado), que o
 bundler resolve ao empacotar `../_shared/templateEngine.ts`.
 
-## ⚠️ GATE — deploy-coupled
-Ao mergear, `automation-scheduler` **tem de ser deployed no mesmo passo**. É o
-**cron a cada minuto** — validar o deployed com atenção (get_edge_function +
-smoke). **NÃO deployar sem aprovação explícita do Victor.** Parado aqui.
+## ✅ DEPLOY EXECUTADO (Victor autorizou "aprovado deploy #43")
+Fluxo deploy-coupled concluído em 2026-07-09:
+1. **Merge** do PR #43 → `main` @ `2f186f4`.
+2. **Deploy** via MCP (layout repo-path: `index.ts` + `_shared/circuitBreaker.ts`
+   + `_shared/templateEngine.ts`, conteúdo exato de `main`; shas dos `_shared`
+   confirmados iguais aos do #42). Resultado: **automation-scheduler v24**,
+   ACTIVE, verify_jwt=false.
+3. **Validação do deployed (com atenção — é cron):**
+   - **OPTIONS smoke** → **HTTP 200 `ok`** (early-return, sem processar a fila) →
+     o módulo **carrega** (imports `_shared` resolvem em runtime). GET/POST não
+     usados (disparariam envios).
+   - **Cron real:** os logs edge-function mostram `POST | 200` para
+     `automation-scheduler` na **version 24** (deployment `..._24`, ~1390ms) logo
+     após o deploy → o **cron a cada minuto corre limpo** com o template
+     partilhado, **sem erros**.
+   - `_shared/templateEngine.ts` + `circuitBreaker.ts` bundlados e resolvidos.
+4. **Sem drift:** `main` (com adoção) == prod (v24 deployed).
 
-## Próximo (após este ser aprovado+deployed)
+## Estado
+**PARADO antes da adoção #3**, conforme instruído. Não avanço para
+`automation-execute` até nova autorização.
+
+## Próximo (aguarda gate)
 Adoção #3: `automation-execute` — usa a variante **rica** `renderAutomationTemplate`
 (→ `RenderResult` com detected/resolved/missing/warnings), diferente do
 `renderTemplate` simples. Requer **decisão de arquitetura** primeiro: alinhar o
